@@ -47,11 +47,7 @@ $offers = [
 function formatPrice($price) {
     $price = ceil($price);
 
-    if ($price >= 1000) {
-        $price = number_format($price, 0, '', ' ');
-    }
-
-    return $price . ' ₽';
+    return number_format($price, 0, '', ' ') . ' ₽';
 }
 ?>
 <!DOCTYPE html>
