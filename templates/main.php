@@ -27,8 +27,9 @@
                         <span class="lot__amount">Стартовая цена</span>
                         <span class="lot__cost"><?= esc(formatPrice($offer['price'])) ?></span>
                     </div>
-                    <div class="lot__timer timer <?= (getRemainingTime($offer['expire_date'])[0] === '00') ? 'timer--finishing' : '' ?>">
-                        <?= esc(implode(':', getRemainingTime($offer['expire_date']))) ?>
+                    <?php list ($hours, $minutes) = getRemainingTime($offer['expire_date']); ?>
+                    <div class="lot__timer timer <?= ($hours === '00') ? 'timer--finishing' : '' ?>">
+                        <?= esc($hours) ?>:<?= esc($minutes) ?>
                     </div>
                 </div>
             </div>
