@@ -29,7 +29,7 @@
                     </div>
                     <?php list ($hours, $minutes) = getRemainingTime($offer['expire_date']); ?>
                     <div class="lot__timer timer <?= ($hours === '00') ? 'timer--finishing' : '' ?>">
-                        <?= esc($hours) ?>:<?= esc($minutes) ?>
+                        <?= esc($hours . ":" . $minutes) ?>
                     </div>
                 </div>
             </div>
