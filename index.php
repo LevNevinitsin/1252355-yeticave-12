@@ -1,5 +1,5 @@
 <?php
-require('helpers.php');
+require __DIR__ . '\helpers.php';
 
 $is_auth = rand(0, 1);
 
@@ -46,12 +46,6 @@ $offers = [
   ],
 ];
 
-function formatPrice($price)
-{
-    $price = ceil($price);
-    return number_format($price, 0, '', ' ') . ' ₽';
-}
-
 $page_content = include_template('main.php', [
     'categories' => $categories,
     'offers' => $offers,
@@ -65,5 +59,5 @@ $layout_content = include_template('layout.php', [
     'user_name' => $user_name,
 ]);
 
-print($layout_content);
+echo $layout_content;
 ?>
