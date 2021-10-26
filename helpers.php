@@ -126,21 +126,24 @@ function get_noun_plural_form (int $number, string $one, string $two, string $ma
  * @param array $data Ассоциативный массив с данными для шаблона
  * @return string Итоговый HTML
  */
-function include_template($name, array $data = []) {
-    $name = 'templates/' . $name;
-    $result = '';
-
-    if (!is_readable($name)) {
-        return $result;
-    }
+function include_template($name, array $data = [])
+{
+    $name = __DIR__ . '/templates/' . $name;
 
     ob_start();
     extract($data);
     require $name;
 
-    $result = ob_get_clean();
-
-    return $result;
+    return ob_get_clean();
 }
 
+function formatPrice($price)
+{
+    $price = ceil($price);
+    return number_format($price, 0, '', ' ') . ' ₽';
+}
 
+function esc($text)
+{
+    return htmlspecialchars($text, ENT_QUOTES);
+}
