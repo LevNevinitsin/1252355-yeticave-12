@@ -38,12 +38,10 @@ CREATE TABLE items (
     FOREIGN KEY (category_id)
     REFERENCES categories(category_id)
     /*
-        При изменении category_id у какой-то категории в родительской таблице,
-        в дочерней этот category_id также должен измениться, чтобы не пропала связь.
         Удаление строки из родительской таблицы запрещено при условии наличя записей
         с соответствующим category_id в дочерней таблице.
     */
-    ON UPDATE CASCADE ON DELETE RESTRICT
+    ON DELETE RESTRICT
 );
 
 CREATE TABLE bids (
