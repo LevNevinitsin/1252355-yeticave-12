@@ -9,4 +9,3 @@ Thumbs.db
 vendor
 uploads/*
 !uploads/.gitkeep
-schema_source.sql

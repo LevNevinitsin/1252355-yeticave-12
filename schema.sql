@@ -13,7 +13,7 @@
 
 
 -- Dumping database structure for yeticave
-CREATE DATABASE IF NOT EXISTS `yeticave` /*!40100 DEFAULT CHARACTER SET utf8 */;
+CREATE DATABASE IF NOT EXISTS `yeticave` /*!40100 DEFAULT CHARACTER SET utf8mb4 */;
 USE `yeticave`;
 
 -- Dumping structure for table yeticave.bids
@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS `bids` (
   `item_id` int(11) unsigned NOT NULL,
   `bid_date_created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`bid_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Data exporting was unselected.
 
@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS `categories` (
   PRIMARY KEY (`category_id`),
   UNIQUE KEY `category_name` (`category_name`),
   UNIQUE KEY `category_code` (`category_code`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Data exporting was unselected.
 
@@ -53,8 +53,11 @@ CREATE TABLE IF NOT EXISTS `items` (
   `category_id` int(5) unsigned NOT NULL,
   `item_date_expire` datetime NOT NULL,
   `item_date_added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`item_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+  PRIMARY KEY (`item_id`),
+  KEY `item_date_expire` (`item_date_expire`),
+  KEY `category_id` (`category_id`),
+  CONSTRAINT `fk_item_category` FOREIGN KEY (`category_id`) REFERENCES `categories` (`category_id`) ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Data exporting was unselected.
 
@@ -68,7 +71,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   `user_date_registered` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`user_id`),
   UNIQUE KEY `user_email` (`user_email`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Data exporting was unselected.
 
