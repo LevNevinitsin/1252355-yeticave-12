@@ -39,12 +39,12 @@ SELECT i.item_name,
        i.item_initial_price,
        i.item_image,
 
-       IFNULL(
-          (SELECT MAX(bid_price)
-            FROM bids AS b
+       COALESCE(
+          (SELECT MAX(b.bid_price)
+             FROM bids AS b
             WHERE i.item_id = b.item_id),
-          'Ставок не было'
-       ) AS top_bid,
+          i.item_initial_price
+       ) AS current_price,
 
        c.category_name
   FROM items AS i

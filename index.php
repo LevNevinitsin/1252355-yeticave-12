@@ -1,60 +1,52 @@
 <?php
+$config_path = __DIR__ . '\config.php';
+
+if (!file_exists($config_path)) {
+    $msg = 'Создайте файл config.php на основе config.sample.php и внесите туда настройки сервера MySQL';
+    trigger_error($msg, E_USER_ERROR);
+}
+
+$config = require $config_path;
 require __DIR__ . '\helpers.php';
 
 $is_auth = rand(0, 1);
-
 $user_name = 'Лев';
 
-$categories = ['Доски и лыжи', 'Крепления', 'Ботинки', 'Одежда', 'Инструменты', 'Разное'];
+$db_charset = 'utf8mb4';
 
-$offers = [
-  [
-    'name' => '2014 Rossignol District Snowboard',
-    'category' => 'Доски и лыжи',
-    'price' => 10999,
-    'img_url' => 'img/lot-1.jpg',
-    'expire_date' => '2021-10-27',
-  ],
-  [
-    'name' => 'DC Ply Mens 2016/2017 Snowboard',
-    'category' => 'Доски и лыжи',
-    'price' => 159999,
-    'img_url' => 'img/lot-2.jpg',
-    'expire_date' => '2021-10-28',
-  ],
-  [
-    'name' => 'Крепления Union Contact Pro 2015 года размер L/XL',
-    'category' => 'Крепления',
-    'price' => 8000,
-    'img_url' => 'img/lot-3.jpg',
-    'expire_date' => '2021-10-29',
-  ],
-  [
-    'name' => 'Ботинки для сноуборда DC Mutiny Charocal',
-    'category' => 'Ботинки',
-    'price' => 10999,
-    'img_url' => 'img/lot-4.jpg',
-    'expire_date' => '2021-10-30',
-  ],
-  [
-    'name' => 'Куртка для сноуборда DC Mutiny Charocal',
-    'category' => 'Одежда',
-    'price' => 7500,
-    'img_url' => 'img/lot-5.jpg',
-    'expire_date' => '2021-10-31',
-  ],
-  [
-    'name' => 'Маска Oakley Canopy',
-    'category' => 'Разное',
-    'price' => 5400,
-    'img_url' => 'img/lot-6.jpg',
-    'expire_date' => '2021-11-01',
-  ],
-];
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+$db = new mysqli(...array_values($config['db']));
+$db->set_charset($db_charset);
+
+$sql = "
+    SELECT i.item_name,
+           i.item_initial_price,
+           i.item_image,
+           i.item_date_expire,
+
+           COALESCE(
+              (SELECT MAX(b.bid_price)
+                 FROM bids AS b
+                WHERE i.item_id = b.item_id),
+              i.item_initial_price
+           ) AS current_price,
+
+           c.category_name
+      FROM items AS i
+           INNER JOIN categories AS c
+           ON i.category_id = c.category_id
+     WHERE item_date_expire > NOW()
+     ORDER BY item_date_added DESC
+";
+
+$new_items = $db->query($sql)->fetch_all(MYSQLI_ASSOC);
+
+$sql = "SELECT category_name, category_code FROM categories";
+$categories = $db->query($sql)->fetch_all(MYSQLI_ASSOC);
 
 $page_content = include_template('main.php', [
     'categories' => $categories,
-    'offers' => $offers,
+    'items' => $new_items,
 ]);
 
 $layout_content = include_template('layout.php', [
@@ -66,4 +58,3 @@ $layout_content = include_template('layout.php', [
 ]);
 
 echo $layout_content;
-?>
