@@ -19,7 +19,8 @@ $db = new mysqli(...array_values($config['db']));
 $db->set_charset($db_charset);
 
 $sql = "
-    SELECT i.item_name,
+    SELECT i.item_id,
+           i.item_name,
            i.item_initial_price,
            i.item_image,
            i.item_date_expire,
