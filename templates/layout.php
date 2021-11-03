@@ -12,7 +12,6 @@
 <header class="main-header">
     <div class="main-header__container container">
         <h1 class="visually-hidden">YetiCave</h1>
-        <?php $isIndexPage = basename($_SERVER['PHP_SELF'], '.php') === 'index' ?>
         <a <?= $isIndexPage ? '' : 'href="index.php"' ?> class="main-header__logo">
             <img src="../img/logo.svg" width="160" height="39" alt="Логотип компании YetiCave">
         </a>
@@ -23,9 +22,9 @@
         <a class="main-header__add-lot button" href="pages/add-lot.html">Добавить лот</a>
 
         <nav class="user-menu">
-        <?php if ($is_auth === 1): ?>
+        <?php if ($isAuth === 1): ?>
             <div class="user-menu__logged">
-                <p><?= esc($user_name) ?></p>
+                <p><?= esc($userName) ?></p>
                 <a class="user-menu__bets" href="pages/my-bets.html">Мои ставки</a>
                 <a class="user-menu__logout" href="#">Выход</a>
             </div>
