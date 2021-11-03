@@ -6,5 +6,6 @@ return [
         'password' => '',
         'dbname' => 'yeticave',
         'port' => 3306,
+        'dbCharset' => 'utf8mb4',
     ],
 ];

@@ -13,10 +13,10 @@ require __DIR__ . '/helpers.php';
 $isAuth = rand(0, 1);
 $userName = 'Лев';
 
-$dbCharset = 'utf8mb4';
+$dbConfig = $config['db'];
 
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
-$db = new mysqli(...array_values($config['db']));
-$db->set_charset($dbCharset);
+$db = new mysqli($dbConfig['host'], $dbConfig['username'], $dbConfig['password'], $dbConfig['dbname'], $dbConfig['port']);
+$db->set_charset($dbConfig['dbCharset']);
 
-$categories = $db->query(getCategoriesSql())->fetch_all(MYSQLI_ASSOC);
+$categories = getCategories($db);

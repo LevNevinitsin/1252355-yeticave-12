@@ -126,7 +126,7 @@ function get_noun_plural_form (int $number, string $one, string $two, string $ma
  * @param array $data Ассоциативный массив с данными для шаблона
  * @return string Итоговый HTML
  */
-function includeTemplate($name, array $data = [])
+function includeTemplate(string $name, array $data = [])
 {
     $name = __DIR__ . '/templates/' . $name;
 
@@ -138,35 +138,32 @@ function includeTemplate($name, array $data = [])
 }
 
 /**
- * Undocumented function
- *
- * @param $price Цена
+ * Принимает цену и возвращает её в формате '12 000 ₽'
+ * @param float $price Цена
  * @return string Отформатированная цена
  */
-function formatPrice($price): string
+function formatPrice(float $price): string
 {
     $price = ceil($price);
     return number_format($price, 0, '', ' ') . ' ₽';
 }
 
 /**
- * Undocumented function
- *
- * @param $text Данные, которые хотим отобразить в HTML
+ * Принимает строку и возвращает её экранированном для HTML виде
+ * @param string|null $text Данные, которые хотим отобразить в HTML
  * @return string Экранированные данные
  */
-function esc($text): string
+function esc(?string $text): string
 {
     return htmlspecialchars($text, ENT_QUOTES);
 }
 
 /**
- * Undocumented function
- *
- * @param $expireDate Дата истечения лота
- * @return array Отсавшееся до истечения лота время в виде массива [ЧЧ, ММ]
+ * Принимает дату истечения лота и возвращает оставшееся до неё время
+ * @param string $expireDate Дата истечения лота
+ * @return array Оставшееся до истечения лота время в виде массива [ЧЧ, ММ]
  */
-function getRemainingTime($expireDate): array
+function getRemainingTime(string $expireDate): array
 {
     $diff = strtotime($expireDate) - time();
     $hours = str_pad(floor($diff / 3600), 2, '0', STR_PAD_LEFT);
@@ -175,8 +172,7 @@ function getRemainingTime($expireDate): array
 }
 
 /**
- * Undocumented function
- *
+ * Принимает шаблон страницы, данные для него и для лейаута и возвращает полный HTML страницы
  * @param string    $pageTemplate   Путь к файлу шаблона относительно папки templates
  * @param array     $pageData       Ассоциативный массив с данными для шаблона
  * @param array     $categories     Ассоциативный массив с категориями товаров
@@ -186,7 +182,8 @@ function getRemainingTime($expireDate): array
  * @param boolean   $isIndexPage    Является ли страница главной
  * @return string                   Полный HTML страницы
  */
-function getHTML(string $pageTemplate, array $pageData, array $categories, int $isAuth, string $userName, string $title, bool $isIndexPage = false): string {
+function getHTML(string $pageTemplate, array $pageData, array $categories, int $isAuth, string $userName, string $title, bool $isIndexPage = false): string
+{
     $pageContent = includeTemplate($pageTemplate, $pageData);
     $layoutData = [
         'content' => $pageContent,
@@ -196,5 +193,12 @@ function getHTML(string $pageTemplate, array $pageData, array $categories, int $
         'userName' => $userName,
         'isIndexPage' => $isIndexPage,
     ];
-    echo includeTemplate('layout.php', $layoutData);
-};
+    return includeTemplate('layout.php', $layoutData);
+}
+
+function render404(array $categories, int $isAuth, string $userName): string
+{
+    http_response_code(404);
+    echo getHtml('404.php', ['categories' => $categories], $categories, $isAuth, $userName, 'Страница не найдена');
+    exit;
+}

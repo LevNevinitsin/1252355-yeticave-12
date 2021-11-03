@@ -1,5 +1,12 @@
 <?php
-function getItemSql()
+/**
+ * Возвращает лот по его id
+ * @param object $db Объект mysqli
+ * @param integer $itemId id лота
+ * @return array|null Ассоциативный массив с данными лота
+ */
+
+function getItem(object $db, int $itemId): ?array
 {
     $sql = "
         SELECT i.item_name,
@@ -22,10 +29,19 @@ function getItemSql()
                ON i.category_id = c.category_id
          WHERE i.item_id = ?
     ";
-    return $sql;
+    $stmt = $db->prepare($sql);
+    $stmt->bind_param("s", $itemId);
+    $stmt->execute();
+    return $stmt->get_result()->fetch_assoc();
 }
 
-function getNewItemsSql()
+/**
+ * Возвращает дейстующие лоты, отсортированные от новых к старым
+ *
+ * @param object $db Объект mysqli
+ * @return array|null Ассоциативный массив с данными лотов
+ */
+function getNewItems(object $db): ?array
 {
     $sql = "
         SELECT i.item_id,
@@ -48,5 +64,5 @@ function getNewItemsSql()
          WHERE item_date_expire > NOW()
          ORDER BY item_date_added DESC
     ";
-    return $sql;
+    return $db->query($sql)->fetch_all(MYSQLI_ASSOC);
 }
