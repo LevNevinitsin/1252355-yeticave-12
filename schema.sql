@@ -76,16 +76,16 @@ CREATE TABLE IF NOT EXISTS `items` (
   CONSTRAINT `fk_item_category` FOREIGN KEY (`category_id`) REFERENCES `categories` (`category_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4;
 
--- Dumping data for table yeticave.items: ~6 rows (approximately)
+-- Dumping data for table yeticave.items: ~7 rows (approximately)
 /*!40000 ALTER TABLE `items` DISABLE KEYS */;
 INSERT INTO `items` (`item_id`, `item_name`, `item_description`, `item_image`, `item_initial_price`, `item_bid_step`, `seller_id`, `winner_id`, `category_id`, `item_date_expire`, `item_date_added`) VALUES
-	(1, '2014 Rossignol District Snowboard', NULL, 'img/lot-1.jpg', 10999.00, 10.00, 1, NULL, 1, '2021-10-29 00:00:00', '2021-10-27 18:07:21'),
-	(2, 'DC Ply Mens 2016/2017 Snowboard', NULL, 'img/lot-2.jpg', 159999.00, 10.00, 2, NULL, 1, '2021-10-30 00:00:00', '2021-10-27 18:07:21'),
-	(3, 'Крепления Union Contact Pro 2015 года размер L/XL', NULL, 'img/lot-3.jpg', 8000.00, 10.00, 1, NULL, 2, '2021-10-31 00:00:00', '2021-10-27 18:07:21'),
-	(4, 'Ботинки для сноуборда DC Mutiny Charocal', NULL, 'img/lot-4.jpg', 10999.00, 10.00, 2, NULL, 3, '2021-11-01 00:00:00', '2021-10-27 18:07:21'),
-	(5, 'Куртка для сноуборда DC Mutiny Charocal', NULL, 'img/lot-5.jpg', 7500.00, 10.00, 1, NULL, 4, '2021-11-02 00:00:00', '2021-10-27 18:07:21'),
-	(6, 'Маска Oakley Canopy', NULL, 'img/lot-6.jpg', 5400.00, 10.00, 2, NULL, 6, '2021-11-03 00:00:00', '2021-10-27 18:07:21'),
-	(7, 'Сумка для ботинок Salomon Extend Max Gearbag Goji Berry', NULL, 'img/lot-7.jpg', 5390.00, 10.00, 1, NULL, 7, '2021-11-03 00:00:00', '2021-10-28 18:55:37');
+	(1, '2014 Rossignol District Snowboard', NULL, 'img/lot-1.jpg', 10999.00, 10.00, 1, NULL, 1, '2021-11-02 00:00:00', '2021-10-27 18:07:21'),
+	(2, 'DC Ply Mens 2016/2017 Snowboard', NULL, 'img/lot-2.jpg', 159999.00, 10.00, 2, NULL, 1, '2021-11-03 00:00:00', '2021-10-27 18:07:21'),
+	(3, 'Крепления Union Contact Pro 2015 года размер L/XL', NULL, 'img/lot-3.jpg', 8000.00, 10.00, 1, NULL, 2, '2021-11-04 00:00:00', '2021-10-27 18:07:21'),
+	(4, 'Ботинки для сноуборда DC Mutiny Charocal', NULL, 'img/lot-4.jpg', 10999.00, 10.00, 2, NULL, 3, '2021-11-05 00:00:00', '2021-10-27 18:07:21'),
+	(5, 'Куртка для сноуборда DC Mutiny Charocal', NULL, 'img/lot-5.jpg', 7500.00, 10.00, 1, NULL, 4, '2021-11-06 00:00:00', '2021-10-27 18:07:21'),
+	(6, 'Маска Oakley Canopy', NULL, 'img/lot-6.jpg', 5400.00, 10.00, 2, NULL, 6, '2021-11-07 00:00:00', '2021-10-27 18:07:21'),
+	(7, 'Сумка для ботинок Salomon Extend Max Gearbag Goji Berry', 'Сумка Extend Max Gearbag предназначена для переноски лыжных ботинок, шлема и аксессуаров. Надежная и вентилируемая конструкция поможет вам более комфортно донести экипировку до склона. Внутри имеется специальный коврик, который поможет сохранить ноги сухими и чистыми во время переобувания мокрых или покрытых снегом ботинок.', 'img/lot-7.jpg', 5390.00, 10.00, 1, NULL, 7, '2021-11-07 00:00:00', '2021-10-28 18:55:37');
 /*!40000 ALTER TABLE `items` ENABLE KEYS */;
 
 -- Dumping structure for table yeticave.users

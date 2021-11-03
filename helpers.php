@@ -29,7 +29,7 @@ function is_date_valid(string $date) : bool {
  *
  * @return mysqli_stmt Подготовленное выражение
  */
-function db_get_prepare_stmt($link, $sql, $data = []) {
+function dbGetPrepareStmt($link, $sql, $data = []) {
     $stmt = mysqli_prepare($link, $sql);
 
     if ($stmt === false) {
@@ -126,7 +126,7 @@ function get_noun_plural_form (int $number, string $one, string $two, string $ma
  * @param array $data Ассоциативный массив с данными для шаблона
  * @return string Итоговый HTML
  */
-function include_template($name, array $data = [])
+function includeTemplate(string $name, array $data = [])
 {
     $name = __DIR__ . '/templates/' . $name;
 
@@ -137,21 +137,68 @@ function include_template($name, array $data = [])
     return ob_get_clean();
 }
 
-function formatPrice($price)
+/**
+ * Принимает цену и возвращает её в формате '12 000 ₽'
+ * @param float $price Цена
+ * @return string Отформатированная цена
+ */
+function formatPrice(float $price): string
 {
     $price = ceil($price);
     return number_format($price, 0, '', ' ') . ' ₽';
 }
 
-function esc($text)
+/**
+ * Принимает строку и возвращает её экранированном для HTML виде
+ * @param string|null $text Данные, которые хотим отобразить в HTML
+ * @return string Экранированные данные
+ */
+function esc(?string $text): string
 {
     return htmlspecialchars($text, ENT_QUOTES);
 }
 
-function getRemainingTime($expireDate)
+/**
+ * Принимает дату истечения лота и возвращает оставшееся до неё время
+ * @param string $expireDate Дата истечения лота
+ * @return array Оставшееся до истечения лота время в виде массива [ЧЧ, ММ]
+ */
+function getRemainingTime(string $expireDate): array
 {
     $diff = strtotime($expireDate) - time();
     $hours = str_pad(floor($diff / 3600), 2, '0', STR_PAD_LEFT);
     $minutes = str_pad(floor(($diff % 3600) / 60), 2, '0', STR_PAD_LEFT);
     return [$hours, $minutes];
+}
+
+/**
+ * Принимает шаблон страницы, данные для него и для лейаута и возвращает полный HTML страницы
+ * @param string    $pageTemplate   Путь к файлу шаблона относительно папки templates
+ * @param array     $pageData       Ассоциативный массив с данными для шаблона
+ * @param array     $categories     Ассоциативный массив с категориями товаров
+ * @param integer   $isAuth         Число 1 либо 0, отображающее статус авторизации пользователя
+ * @param string    $userName       Имя пользователя
+ * @param string    $title          Содержимое для тега <title>
+ * @param boolean   $isIndexPage    Является ли страница главной
+ * @return string                   Полный HTML страницы
+ */
+function getHTML(string $pageTemplate, array $pageData, array $categories, int $isAuth, string $userName, string $title, bool $isIndexPage = false): string
+{
+    $pageContent = includeTemplate($pageTemplate, $pageData);
+    $layoutData = [
+        'content' => $pageContent,
+        'categories' => $categories,
+        'title' => $title,
+        'isAuth' => $isAuth,
+        'userName' => $userName,
+        'isIndexPage' => $isIndexPage,
+    ];
+    return includeTemplate('layout.php', $layoutData);
+}
+
+function render404(array $categories, int $isAuth, string $userName): string
+{
+    http_response_code(404);
+    echo getHtml('404.php', ['categories' => $categories], $categories, $isAuth, $userName, 'Страница не найдена');
+    exit;
 }
