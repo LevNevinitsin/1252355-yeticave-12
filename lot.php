@@ -2,7 +2,7 @@
 require __DIR__ . '/initialize.php';
 require __DIR__ . '/models/items.php';
 
-$itemId = $_GET['item_id'] ?? NULL;
+$itemId = $_GET['item_id'] ?? null;
 
 if (!$itemId) {
     render404($categories, $isAuth, $userName);

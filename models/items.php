@@ -1,12 +1,12 @@
 <?php
 /**
  * Возвращает лот по его id
- * @param object $db Объект mysqli
+ * @param mysqli $db Объект класса mysqli
  * @param integer $itemId id лота
  * @return array|null Ассоциативный массив с данными лота
  */
 
-function getItem(object $db, int $itemId): ?array
+function getItem(mysqli $db, int $itemId): ?array
 {
     $sql = "
         SELECT i.item_name,
@@ -38,10 +38,10 @@ function getItem(object $db, int $itemId): ?array
 /**
  * Возвращает дейстующие лоты, отсортированные от новых к старым
  *
- * @param object $db Объект mysqli
+ * @param mysqli $db Объект класса mysqli
  * @return array|null Ассоциативный массив с данными лотов
  */
-function getNewItems(object $db): ?array
+function getNewItems(mysqli $db): ?array
 {
     $sql = "
         SELECT i.item_id,
@@ -65,4 +65,34 @@ function getNewItems(object $db): ?array
          ORDER BY item_date_added DESC
     ";
     return $db->query($sql)->fetch_all(MYSQLI_ASSOC);
+}
+
+function insertItem(mysqli $db, string $imagePath)
+{
+    $sql = "
+        INSERT INTO items (
+            item_name,
+            item_description,
+            item_image,
+            item_initial_price,
+            item_bid_step,
+            seller_id,
+            category_id,
+            item_date_expire
+        )
+        VALUES (?, ?, ?, ?, ?, 1, ?, ?)
+    ";
+
+    $stmt = $db->prepare($sql);
+    $stmt->bind_param(
+        "sssssss",
+        $_POST['lot-name'],
+        $_POST['description'],
+        $imagePath,
+        $_POST['lot-rate'],
+        $_POST['lot-step'],
+        $_POST['category_id'],
+        $_POST['lot-date']
+    );
+    $stmt->execute();
 }

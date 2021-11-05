@@ -3,17 +3,17 @@
  * Проверяет переданную дату на соответствие формату 'ГГГГ-ММ-ДД'
  *
  * Примеры использования:
- * is_date_valid('2019-01-01'); // true
- * is_date_valid('2016-02-29'); // true
- * is_date_valid('2019-04-31'); // false
- * is_date_valid('10.10.2010'); // false
- * is_date_valid('10/10/2010'); // false
+ * isDateValid('2019-01-01'); // true
+ * isDateValid('2016-02-29'); // true
+ * isDateValid('2019-04-31'); // false
+ * isDateValid('10.10.2010'); // false
+ * isDateValid('10/10/2010'); // false
  *
  * @param string $date Дата в виде строки
  *
  * @return bool true при совпадении с форматом 'ГГГГ-ММ-ДД', иначе false
  */
-function is_date_valid(string $date) : bool {
+function isDateValid(string $date) : bool {
     $format_to_check = 'Y-m-d';
     $dateTimeObj = date_create_from_format($format_to_check, $date);
 
@@ -196,9 +196,197 @@ function getHTML(string $pageTemplate, array $pageData, array $categories, int $
     return includeTemplate('layout.php', $layoutData);
 }
 
-function render404(array $categories, int $isAuth, string $userName): string
+/**
+ * Передает код ошибки 404, выводит HTML для страницы 404 и завершает скрипт.
+ * @param array $categories Ассоциативный массив с категориями товаров
+ * @param integer $isAuth Число 1 либо 0, отображающее статус авторизации пользователя
+ * @param string $userName Имя пользователя
+ */
+function render404(array $categories, int $isAuth, string $userName)
 {
     http_response_code(404);
     echo getHtml('404.php', ['categories' => $categories], $categories, $isAuth, $userName, 'Страница не найдена');
     exit;
+}
+
+/**
+ * Получает экранированное значение поля
+ * @param string $fieldname Имя поля
+ * @return string|null Экранированное значение поля (если было)
+ */
+function getPostVal(string $fieldname): ?string
+{
+    return esc(filter_input(INPUT_POST, $fieldname));
+}
+
+/**
+ * Получает имя класса-модификатора для поля, если есть ошибка валидации
+ * @param array $errors Массив с ошибками
+ * @param string $fieldname Имя поля
+ * @return string Имя класса или пустая строка, если ошибки нет
+ */
+function getErrorClassname(array $errors, string $fieldname): string
+{
+    return isset($errors[$fieldname]) ? 'form__item--invalid' : '';
+}
+
+/**
+ * Получает сообщение об ошибке валидации поля
+ * @param array|null $errors Массив с ошибками
+ * @param string $fieldname Имя поля
+ * @return string Сообщение об ошибке или пустая строка, если ошибки нет
+ */
+function getErrorMessage(?array $errors, string $fieldname): string
+{
+    return $errors[$fieldname] ?? '';
+}
+
+/**
+ * Валидирует id
+ * @param string|null $id Валидируемый id
+ * @param array $allowedList Массив допустимых значений
+ * @return string|null Строка с ошибкой или null, если выбран допустимый id
+ */
+function validateId(?string $id, array $allowedList): ?string
+{
+    if (!in_array($id, $allowedList)) {
+        return 'Укажите категорию из списка';
+    }
+
+    return null;
+}
+
+/**
+ * Валидирует, является ли строка положительным числом
+ * @param string|null $value Валидируемая строка
+ * @return string|null Строка с ошибкой или null, если $value является положительным числом
+ */
+function validatePositiveNumber(?string $value): ?string
+{
+    $value = filter_var($value, FILTER_VALIDATE_FLOAT);
+
+    if ($value !== false && $value > 0) {
+        return null;
+    }
+
+    return 'Укажите положительное число';
+}
+
+/**
+ * Валидирует, является ли строка положительным целым числом
+ * @param string|null $value Валидируемая строка
+ * @return string|null Строка с ошибкой или null, если $value является положительным целым числом
+ */
+function validatePositiveInt(?string $value): ?string
+{
+    $options = [
+        'options' => ['min_range' => 0],
+    ];
+
+    if (filter_var($value, FILTER_VALIDATE_INT, $options) !== false) {
+        return null;
+    }
+
+    return 'Укажите целое положительное число';
+}
+
+/**
+ * Валидирует строку на соответствие формату ГГГГ-ММ-ДД и на значение, равное
+ * как минимум следующему дню
+ *
+ * @param string|null $date Валидируемая строка
+ * @return string|null Строка с ошибкой или null, если дата корректна
+ */
+function validateDate(?string $date): ?string
+{
+    if (!isDateValid($date)) {
+        return 'Укажите дату в формате ГГГГ-ММ-ДД';
+    }
+
+    if (strtotime($date) <= time()) {
+        return 'Укажите как минимум завтра';
+    }
+
+    return null;
+}
+
+/**
+ * Получает ошибки валидации в полях формы
+ * @param array $categories_ids Допустимые id категорий
+ * @return array Ошибки валидации в виде массива ['имя поля' => 'Сообщение об ошибке', ...]
+ */
+function getFieldsErrors(array $categories_ids): array
+{
+    $errors = [];
+
+    $requiredFields = [
+        'lot-name' => 'Введите наименование лота',
+        'category_id' => 'Выберите категорию',
+        'description' => 'Напишите описание лота',
+        'image' => 'Добавьте изображение',
+        'lot-rate' => 'Введите начальную цену',
+        'lot-step' => 'Введите шаг ставки',
+        'lot-date' => 'Введите дату завершения торгов',
+    ];
+
+    $rules = [
+        'category_id' => function($value) use ($categories_ids) {
+            return validateId($value, $categories_ids);
+        },
+        'lot-rate' => function($value) {
+            return validatePositiveNumber($value);
+        },
+        'lot-step' => function($value) {
+            return validatePositiveInt($value);
+        },
+        'lot-date' => function($value) {
+            return validateDate($value);
+        },
+    ];
+
+    $_POST['lot-rate'] = str_replace(',', '.', $_POST['lot-rate']);
+
+    foreach ($_POST as $key => $value) {
+        if (in_array($key, array_keys($requiredFields)) && empty($value)) {
+            $errors[$key] = $requiredFields[$key];
+        } else if (isset($rules[$key])) {
+            $rule = $rules[$key];
+            $errors[$key] = $rule($value);
+        }
+    }
+
+    return array_filter($errors);
+}
+
+/**
+ * Проверяет принадлежность файла к одному из указанных MIME типов.
+ * @param string $filename Имя проверяемого файла
+ * @param array $mimeTypes Допустимые MIME типы
+ * @return boolean true, если файл подходит, в противном случае false
+ */
+function isValidMime(string $filename, array $mimeTypes): bool
+{
+    $finfo = new finfo(FILEINFO_MIME_TYPE);
+    $fileType = $finfo->file($filename);
+    return in_array($fileType, $mimeTypes, true);
+}
+
+/**
+ * Получает ошибку валидации файла
+ * @param string Имя валидируемого файла
+ * @return string|null Сообщение об ошибке или null, если файл был загружен и он нужного формата.
+ */
+function getFileError(string $fieldname): ?string
+{
+    $imageAttributes = $_FILES[$fieldname] ?? null;
+
+    if ($imageAttributes['name']) {
+        if (isValidMime($imageAttributes['tmp_name'], ['image/jpeg', 'image/png'])) {
+            return null;
+        }
+
+        return 'Загрузите картинку в формате JPEG или PNG';
+    }
+
+    return 'Загрузите файл JPEG или PNG';
 }
