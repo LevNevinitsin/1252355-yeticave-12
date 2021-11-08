@@ -2,25 +2,24 @@
 require __DIR__ . '/initialize.php';
 require __DIR__ . '/models/items.php';
 
-$categories_ids = array_column($categories, 'category_id');
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $errors = getFieldsErrors($categories_ids);
-    $fileError = getFileError('image');
+    $formConfig = require __DIR__ . '/configs/config-add-lot.php';
+    $fieldsRules = $formConfig['fieldsRules'];
+    $formData = array_merge($_POST, $_FILES);
 
-    if ($fileError) {
-        $errors['image'] = $fileError;
-    }
+    $errors = getFormErrors($formData, $fieldsRules, $fieldsTypesNames);
 
     if (!count($errors)) {
-        $imageAttributes = $_FILES['image'];
-        $imagePath = 'uploads/' . uniqid() . "." . pathinfo($imageAttributes['name'], PATHINFO_EXTENSION);
-        move_uploaded_file($imageAttributes['tmp_name'], $imagePath);
-        insertItem($db, $imagePath);
-        header("Location: lot.php?item_id=" . $db->insert_id);
-    } else {
-        echo getHtml('add-lot.php', ['errors' => $errors, 'categories' => $categories], $categories, $isAuth, $userName, 'Добавление лота');
+        $formData = formatDecimalValues($formData, $fieldsRules, $fieldsTypesNames);
+        $formData = moveFiles($formData, $fieldsRules, $fieldsTypesNames);
+        $queryFunction = $formConfig['queryFunction'];
+        $queryFunction($db, $formData);
+        header("Location: {$formConfig['redirectLocation']}" . $db->insert_id);
     }
-} else {
-    echo getHtml('add-lot.php', ['errors' => [], 'categories' => $categories], $categories, $isAuth, $userName, 'Добавление лота');
 }
+
+echo getHtml('add-lot.php', [
+    'categories' => $categories,
+    'formData' => $formData ?? [],
+    'errors' => $errors ?? [],
+], $categories, $isAuth, $userName, 'Добавление лота');

@@ -1,7 +1,7 @@
 <?php
 /**
  * Возвращает лот по его id
- * @param mysqli $db Объект класса mysqli
+ * @param mysqli $db Объект с базой данных
  * @param integer $itemId id лота
  * @return array|null Ассоциативный массив с данными лота
  */
@@ -38,7 +38,7 @@ function getItem(mysqli $db, int $itemId): ?array
 /**
  * Возвращает дейстующие лоты, отсортированные от новых к старым
  *
- * @param mysqli $db Объект класса mysqli
+ * @param mysqli $db Объект с базой данных
  * @return array|null Ассоциативный массив с данными лотов
  */
 function getNewItems(mysqli $db): ?array
@@ -67,7 +67,12 @@ function getNewItems(mysqli $db): ?array
     return $db->query($sql)->fetch_all(MYSQLI_ASSOC);
 }
 
-function insertItem(mysqli $db, string $imagePath)
+/**
+ * Добавляет в базу данных запись с новым лотом
+ * @param mysqli $db Объект с базой данных
+ * @param string $imagePath Путь к картинке
+ */
+function insertItem(mysqli $db, array $formData)
 {
     $sql = "
         INSERT INTO items (
@@ -86,13 +91,13 @@ function insertItem(mysqli $db, string $imagePath)
     $stmt = $db->prepare($sql);
     $stmt->bind_param(
         "sssssss",
-        $_POST['lot-name'],
-        $_POST['description'],
-        $imagePath,
-        $_POST['lot-rate'],
-        $_POST['lot-step'],
-        $_POST['category_id'],
-        $_POST['lot-date']
+        $formData['lot-name'],
+        $formData['description'],
+        $formData['image']['relativePath'],
+        $formData['lot-rate'],
+        $formData['lot-step'],
+        $formData['category_id'],
+        $formData['lot-date']
     );
     $stmt->execute();
 }

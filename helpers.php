@@ -81,7 +81,7 @@ function dbGetPrepareStmt($link, $sql, $data = []) {
  * Пример использования:
  * $remaining_minutes = 5;
  * echo "Я поставил таймер на {$remaining_minutes} " .
- *     get_noun_plural_form(
+ *     getNounPluralForm(
  *         $remaining_minutes,
  *         'минута',
  *         'минуты',
@@ -89,14 +89,14 @@ function dbGetPrepareStmt($link, $sql, $data = []) {
  *     );
  * Результат: "Я поставил таймер на 5 минут"
  *
- * @param int $number Число, по которому вычисляем форму множественного числа
- * @param string $one Форма единственного числа: яблоко, час, минута
- * @param string $two Форма множественного числа для 2, 3, 4: яблока, часа, минуты
- * @param string $many Форма множественного числа для остальных чисел
+ * @param   int      $number  Число, по которому вычисляем форму множественного числа
+ * @param   string   $one     Форма единственного числа: яблоко, час, минута
+ * @param   string   $two     Форма множественного числа для 2, 3, 4: яблока, часа, минуты
+ * @param   string   $many    Форма множественного числа для остальных чисел
  *
- * @return string Рассчитанная форма множественнго числа
+ * @return  string            Рассчитанная форма множественнго числа
  */
-function get_noun_plural_form (int $number, string $one, string $two, string $many): string
+function getNounPluralForm(int $number, string $one, string $two, string $many): string
 {
     $number = (int) $number;
     $mod10 = $number % 10;
@@ -122,9 +122,9 @@ function get_noun_plural_form (int $number, string $one, string $two, string $ma
 
 /**
  * Подключает шаблон, передает туда данные и возвращает итоговый HTML контент
- * @param string $name Путь к файлу шаблона относительно папки templates
- * @param array $data Ассоциативный массив с данными для шаблона
- * @return string Итоговый HTML
+ * @param   string   $name  Путь к файлу шаблона относительно папки templates
+ * @param   array    $data  Ассоциативный массив с данными для шаблона
+ * @return  string          Итоговый HTML
  */
 function includeTemplate(string $name, array $data = [])
 {
@@ -139,8 +139,8 @@ function includeTemplate(string $name, array $data = [])
 
 /**
  * Принимает цену и возвращает её в формате '12 000 ₽'
- * @param float $price Цена
- * @return string Отформатированная цена
+ * @param   float    $price  Цена
+ * @return  string           Отформатированная цена
  */
 function formatPrice(float $price): string
 {
@@ -148,10 +148,14 @@ function formatPrice(float $price): string
     return number_format($price, 0, '', ' ') . ' ₽';
 }
 
+function getKilobytesValue(int $bytesValue): int {
+    return floor($bytesValue / 1024);
+}
+
 /**
  * Принимает строку и возвращает её экранированном для HTML виде
- * @param string|null $text Данные, которые хотим отобразить в HTML
- * @return string Экранированные данные
+ * @param   string|null   $text  Данные, которые хотим отобразить в HTML
+ * @return  string               Экранированные данные
  */
 function esc(?string $text): string
 {
@@ -160,8 +164,8 @@ function esc(?string $text): string
 
 /**
  * Принимает дату истечения лота и возвращает оставшееся до неё время
- * @param string $expireDate Дата истечения лота
- * @return array Оставшееся до истечения лота время в виде массива [ЧЧ, ММ]
+ * @param   string   $expireDate  Дата истечения лота
+ * @return  array                 Оставшееся до истечения лота время в виде массива [ЧЧ, ММ]
  */
 function getRemainingTime(string $expireDate): array
 {
@@ -173,14 +177,14 @@ function getRemainingTime(string $expireDate): array
 
 /**
  * Принимает шаблон страницы, данные для него и для лейаута и возвращает полный HTML страницы
- * @param string    $pageTemplate   Путь к файлу шаблона относительно папки templates
- * @param array     $pageData       Ассоциативный массив с данными для шаблона
- * @param array     $categories     Ассоциативный массив с категориями товаров
- * @param integer   $isAuth         Число 1 либо 0, отображающее статус авторизации пользователя
- * @param string    $userName       Имя пользователя
- * @param string    $title          Содержимое для тега <title>
- * @param boolean   $isIndexPage    Является ли страница главной
- * @return string                   Полный HTML страницы
+ * @param   string    $pageTemplate   Путь к файлу шаблона относительно папки templates
+ * @param   array     $pageData       Ассоциативный массив с данными для шаблона
+ * @param   array     $categories     Ассоциативный массив с категориями товаров
+ * @param   integer   $isAuth         Число 1 либо 0, отображающее статус авторизации пользователя
+ * @param   string    $userName       Имя пользователя
+ * @param   string    $title          Содержимое для тега <title>
+ * @param   boolean   $isIndexPage    Является ли страница главной
+ * @return  string                    Полный HTML страницы
  */
 function getHTML(string $pageTemplate, array $pageData, array $categories, int $isAuth, string $userName, string $title, bool $isIndexPage = false): string
 {
@@ -198,9 +202,9 @@ function getHTML(string $pageTemplate, array $pageData, array $categories, int $
 
 /**
  * Передает код ошибки 404, выводит HTML для страницы 404 и завершает скрипт.
- * @param array $categories Ассоциативный массив с категориями товаров
- * @param integer $isAuth Число 1 либо 0, отображающее статус авторизации пользователя
- * @param string $userName Имя пользователя
+ * @param  array     $categories  Ассоциативный массив с категориями товаров
+ * @param  integer   $isAuth      Число 1 либо 0, отображающее статус авторизации пользователя
+ * @param  string    $userName    Имя пользователя
  */
 function render404(array $categories, int $isAuth, string $userName)
 {
@@ -211,19 +215,19 @@ function render404(array $categories, int $isAuth, string $userName)
 
 /**
  * Получает экранированное значение поля
- * @param string $fieldname Имя поля
- * @return string|null Экранированное значение поля (если было)
+ * @param   string        $fieldname  Имя поля
+ * @return  string|null               Экранированное значение поля (если было)
  */
-function getPostVal(string $fieldname): ?string
+function getPostVal(array $formData, string $fieldname): ?string
 {
-    return esc(filter_input(INPUT_POST, $fieldname));
+    return esc($formData[$fieldname] ?? '');
 }
 
 /**
  * Получает имя класса-модификатора для поля, если есть ошибка валидации
- * @param array $errors Массив с ошибками
- * @param string $fieldname Имя поля
- * @return string Имя класса или пустая строка, если ошибки нет
+ * @param   array    $errors     Массив с ошибками
+ * @param   string   $fieldname  Имя поля
+ * @return  string               Имя класса или пустая строка, если ошибки нет
  */
 function getErrorClassname(array $errors, string $fieldname): string
 {
@@ -232,9 +236,9 @@ function getErrorClassname(array $errors, string $fieldname): string
 
 /**
  * Получает сообщение об ошибке валидации поля
- * @param array|null $errors Массив с ошибками
- * @param string $fieldname Имя поля
- * @return string Сообщение об ошибке или пустая строка, если ошибки нет
+ * @param   array|null   $errors     Массив с ошибками
+ * @param   string       $fieldname  Имя поля
+ * @return  string                   Сообщение об ошибке или пустая строка, если ошибки нет
  */
 function getErrorMessage(?array $errors, string $fieldname): string
 {
@@ -242,151 +246,306 @@ function getErrorMessage(?array $errors, string $fieldname): string
 }
 
 /**
- * Валидирует id
- * @param string|null $id Валидируемый id
- * @param array $allowedList Массив допустимых значений
- * @return string|null Строка с ошибкой или null, если выбран допустимый id
+ * Получает функцию валидации значения на вхождение в список допустимых значений
+ * @param   array      $allowedList  Допустимые значения
+ * @return  callable                 Функция валидации
  */
-function validateId(?string $id, array $allowedList): ?string
+function getValidateAcceptability(array $allowedList): callable
 {
-    if (!in_array($id, $allowedList)) {
-        return 'Укажите категорию из списка';
-    }
+    return function ($value, ?string $message) use ($allowedList) {
+        $defaultMessage = "Выберите допустимое значение";
 
-    return null;
-}
+        if (!in_array($value, $allowedList)) {
+            return $message ?? $defaultMessage;
+        }
 
-/**
- * Валидирует, является ли строка положительным числом
- * @param string|null $value Валидируемая строка
- * @return string|null Строка с ошибкой или null, если $value является положительным числом
- */
-function validatePositiveNumber(?string $value): ?string
-{
-    $value = filter_var($value, FILTER_VALIDATE_FLOAT);
-
-    if ($value !== false && $value > 0) {
         return null;
-    }
-
-    return 'Укажите положительное число';
+    };
 }
 
 /**
- * Валидирует, является ли строка положительным целым числом
- * @param string|null $value Валидируемая строка
- * @return string|null Строка с ошибкой или null, если $value является положительным целым числом
+ * Получает функцию валидации даты на соответствие формату "ГГГГ-ММ-ДД"
+ * @return callable Функция валидации
  */
-function validatePositiveInt(?string $value): ?string
+function getValidateDateFormat(): callable
 {
-    $options = [
-        'options' => ['min_range' => 0],
-    ];
+    return function (?string $date, ?string $message) {
+        $defaultMessage = "Укажите дату в формате ГГГГ-ММ-ДД";
 
-    if (filter_var($value, FILTER_VALIDATE_INT, $options) !== false) {
+        if (!isDateValid($date)) {
+            return $message ?? $defaultMessage;
+        }
+
         return null;
-    }
-
-    return 'Укажите целое положительное число';
+    };
 }
 
 /**
- * Валидирует строку на соответствие формату ГГГГ-ММ-ДД и на значение, равное
- * как минимум следующему дню
+ * Получает функцию валидации даты на указанный интервал в днях от сегодня
+ * @param   integer    $daysInterval  Минимальный интервал
+ * @return  callable                  Функция валидации
+ */
+function getValidateDateInterval(int $daysInterval): callable
+{
+    return function (?string $date, ?string $message) use ($daysInterval) {
+        $dayWordForm = getNounPluralForm($daysInterval, 'день', 'дня', 'дней');
+        $defaultMessage = "Минимум $daysInterval $dayWordForm  от сегодня";
+
+        $dateToday = new DateTime(date("Y-m-d"));
+        $dateSelected = new DateTime($date);
+        $dateDiff = (int) $dateToday->diff($dateSelected)->format("%r%a");
+
+        if ($dateDiff < $daysInterval) {
+            return $message ?? $defaultMessage;
+        }
+
+        return null;
+    };
+}
+
+/**
+ * Получает функцию валидации строки на соответствие диапазону длины
+ * @param   integer    $min  Минимальная длина
+ * @param   integer    $max  Максимальная длина
+ * @return  callable         Функция валидации
+ */
+function getValidateLength(int $min, int $max): callable
+{
+    return function (string $value, ?string $message) use ($min, $max) {
+        $defaultMessage = "Значение должно быть от $min до $max символов";
+        $length = strlen($value);
+
+        if ($length >= $min && $length <= $max) {
+            return null;
+        }
+
+        return $message ?? $defaultMessage;
+    };
+}
+
+/**
+ * Получает фунцию валидации значения на положительное целое число
+ * @return callable Функция валидации
+ */
+function getValidatePositiveInt(): callable
+{
+    return function($value, ?string $message) {
+        $defaultMessage = "Укажите целое положительное число";
+
+        $options = [
+            'options' => ['min_range' => 0],
+        ];
+
+        if (filter_var($value, FILTER_VALIDATE_INT, $options) !== false) {
+            return null;
+        }
+
+        return $message ?? $defaultMessage;
+    };
+}
+
+/**
+ * Получает фунцию валидации значения на положительное число
+ * @return callable Функция валидации
+ */
+function getValidatePositiveNumber(): callable
+{
+    return function($value, ?string $message): ?string {
+        $defaultMessage = "Укажите положительное число";
+
+        $value = str_replace(',', '.', $value);
+        $value = filter_var($value, FILTER_VALIDATE_FLOAT);
+
+        if ($value !== false && $value > 0) {
+            return null;
+        }
+
+        return $message ?? $defaultMessage;
+    };
+}
+
+/**
+ * Получает функцию валидации значения на максимальные длины частей числа
+ * @param   integer    $wholeMax    Максимальная длина целой части
+ * @param   integer    $decimalMax  Максимальная длина дробной части
+ * @return  callable                Функция валидации
+ */
+function getValidateDecimalLengths(int $wholeMax, int $decimalMax): callable
+{
+    return function($value, ?string $message) use ($wholeMax, $decimalMax): ?string {
+        $digitWord = getNounPluralForm($wholeMax, 'знака', 'знаков', 'знаков');
+        $defaultMessage = "До&nbsp;{$wholeMax}&nbsp;{$digitWord} перед запятой&nbsp;и&nbsp;до&nbsp;{$decimalMax}&nbsp;&mdash; после";
+        $pattern = "/^\d{1,$wholeMax}$|^\d{1,$wholeMax}[\.\,]\d{1,$decimalMax}$/";
+
+        if (preg_match($pattern, $value)) {
+            return null;
+        }
+
+        return $message ?? $defaultMessage;
+    };
+}
+
+/**
+ * Получает функцию валидации файла на MIME тип, расширение и размер
  *
- * @param string|null $date Валидируемая строка
- * @return string|null Строка с ошибкой или null, если дата корректна
+ * @param   array      $mimeTypes    Допустимые MIME типы
+ * @param   array      $extensions   Допустимые расширения
+ * @param   string     $typesText    Описание допустимых форматов в текстовом виде
+ * @param   integer    $maxSize      Максимальный размер в байтах
+ * @return  callable                 Функция валидации
  */
-function validateDate(?string $date): ?string
+function getValidateFile(array $mimeTypes, array $extensions, string $typesText, int $maxSize): callable
 {
-    if (!isDateValid($date)) {
-        return 'Укажите дату в формате ГГГГ-ММ-ДД';
+    return function (array $fileAtrributes, ?string $message) use ($mimeTypes, $extensions, $typesText, $maxSize) {
+        $maxSizeInKb = getKilobytesValue($maxSize);
+        $defaultMessage = "Добавьте изображение $typesText до $maxSizeInKb килобайт";
+
+        if (isValidFormat($fileAtrributes, $mimeTypes, $extensions) && $fileAtrributes['size'] <= $maxSize) {
+            return null;
+        }
+
+        return $message ?? $defaultMessage;
+    };
+}
+
+/**
+ * Проверяет принадлежность файла к одному из указанных MIME типов и
+ * наличие у него нужного расширения.
+ *
+ * @param   array     $fileAttributes  Массив с атрибутами файла
+ * @param   array     $mimeTypes       Допустимые MIME типы
+ * @param   array     $extensions      Допустимые расширения
+ * @return  boolean                    true, если у файла нужные MIME тип и расширение; иначе false
+ */
+function isValidFormat(array $fileAttributes, array $mimeTypes, array $extensions): bool
+{
+    $finfo = new finfo(FILEINFO_MIME_TYPE);
+    $fileType = $finfo->file($fileAttributes['tmp_name']);
+    $fileExtension = pathinfo($fileAttributes['name'], PATHINFO_EXTENSION);
+    return in_array($fileType, $mimeTypes, true) && in_array($fileExtension, $extensions, true);
+}
+
+/**
+ * Получает ошибку валидации поля, используя настройки из конфига
+ *
+ * @param   string        $name               Имя поля
+ * @param   mixed         $value              Значение поля
+ * @param   string|null   $requiredMessage    Сообщение на случай, если поле обязательно, но не заполнено
+ * @param   bool          $isFile             Является ли файловым полем
+ * @param   array|null    $validators         Массив с функциями-валидаторами
+ * @return  string|null                       Текст ошибки
+ */
+function getFieldError(string $name, $value, ?string $requiredMessage, bool $isFile, ?array $validators): ?string
+{
+    if ($requiredMessage) {
+        if (($isFile && empty($value['name'])) || (!$isFile && empty($value))) {
+            return $requiredMessage;
+        }
     }
 
-    if (strtotime($date) <= time()) {
-        return 'Укажите как минимум завтра';
+    if ($validators) {
+        foreach ($validators as $validator) {
+            $error = $validator['function']($value, $validator['message'] ?? null);
+
+            if ($error) {
+                return $error;
+            }
+        }
     }
 
     return null;
 }
 
 /**
- * Получает ошибки валидации в полях формы
- * @param array $categories_ids Допустимые id категорий
- * @return array Ошибки валидации в виде массива ['имя поля' => 'Сообщение об ошибке', ...]
+ * Получает ошибки валидации данных из формы, используя настройки из конфига
+ * @param   array   $formData          Данные формы
+ * @param   array   $fieldsRules       Правила валидации и дальнейшей обработки значений полей формы
+ * @param   array   $fieldsTypesNames  Конфиг с названиями типов полей
+ * @return  array                      Массив с информацией об ошибках
  */
-function getFieldsErrors(array $categories_ids): array
+function getFormErrors(array $formData, array $fieldsRules, array $fieldsTypesNames): array
 {
     $errors = [];
 
-    $requiredFields = [
-        'lot-name' => 'Введите наименование лота',
-        'category_id' => 'Выберите категорию',
-        'description' => 'Напишите описание лота',
-        'image' => 'Добавьте изображение',
-        'lot-rate' => 'Введите начальную цену',
-        'lot-step' => 'Введите шаг ставки',
-        'lot-date' => 'Введите дату завершения торгов',
-    ];
-
-    $rules = [
-        'category_id' => function($value) use ($categories_ids) {
-            return validateId($value, $categories_ids);
-        },
-        'lot-rate' => function($value) {
-            return validatePositiveNumber($value);
-        },
-        'lot-step' => function($value) {
-            return validatePositiveInt($value);
-        },
-        'lot-date' => function($value) {
-            return validateDate($value);
-        },
-    ];
-
-    $_POST['lot-rate'] = str_replace(',', '.', $_POST['lot-rate']);
-
-    foreach ($_POST as $key => $value) {
-        if (in_array($key, array_keys($requiredFields)) && empty($value)) {
-            $errors[$key] = $requiredFields[$key];
-        } else if (isset($rules[$key])) {
-            $rule = $rules[$key];
-            $errors[$key] = $rule($value);
-        }
+    foreach ($formData as $name => $value) {
+        $fieldRules = $fieldsRules[$name];
+        $validators = $fieldRules['validators'] ?? null;
+        $requiredMessage = $fieldRules['requiredMessage'] ?? null;
+        $type = $fieldRules['type'] ?? false;
+        $isFile = $type === $fieldsTypesNames['fileTypeName'];
+        $errors[$name] = getFieldError($name, $value, $requiredMessage, $isFile, $validators);
     }
 
     return array_filter($errors);
 }
 
 /**
- * Проверяет принадлежность файла к одному из указанных MIME типов.
- * @param string $filename Имя проверяемого файла
- * @param array $mimeTypes Допустимые MIME типы
- * @return boolean true, если файл подходит, в противном случае false
+ * Получает имена полей указанного типа из конфига валидации формы
+ * @param   array    $fieldsRules  Конфиг валидации и дальнейшей обработки значений полей формы
+ * @param   string   $type         Тип поля
+ * @return  array                  Поля укзанного типа
  */
-function isValidMime(string $filename, array $mimeTypes): bool
+function getFieldsByType(array $fieldsRules, string $type): array
 {
-    $finfo = new finfo(FILEINFO_MIME_TYPE);
-    $fileType = $finfo->file($filename);
-    return in_array($fileType, $mimeTypes, true);
+    $wantedFields = array_filter($fieldsRules, function($fieldConfig) use ($type) {
+        return ($fieldConfig['type'] ?? null) === $type;
+    });
+
+    $wantedFieldsNames = array_keys($wantedFields);
+    return $wantedFieldsNames;
 }
 
 /**
- * Получает ошибку валидации файла
- * @param string Имя валидируемого файла
- * @return string|null Сообщение об ошибке или null, если файл был загружен и он нужного формата.
+ * Заменяет запятую на точку в значениях полей, принимающих дробные числа
+ * @param   array   $formData          Данные формы
+ * @param   array   $fieldsRules       Правила валидации и дальнейшей обработки значений полей формы
+ * @param   array   $fieldsTypesNames  Конфиг с названиями типов полей
+ * @return  array                      Обновлённые данные формы
  */
-function getFileError(string $fieldname): ?string
+function formatDecimalValues(array $formData, array $fieldsRules, array $fieldsTypesNames): array
 {
-    $imageAttributes = $_FILES[$fieldname] ?? null;
+    $decimalTypeName = $fieldsTypesNames['decimalTypeName'];
+    $decimalFieldsNames = getFieldsByType($fieldsRules, $decimalTypeName);
 
-    if ($imageAttributes['name']) {
-        if (isValidMime($imageAttributes['tmp_name'], ['image/jpeg', 'image/png'])) {
-            return null;
-        }
-
-        return 'Загрузите картинку в формате JPEG или PNG';
+    foreach ($decimalFieldsNames as $decimalFieldName) {
+        $formData[$decimalFieldName] = str_replace(',', '.', $formData[$decimalFieldName]);
     }
 
-    return 'Загрузите файл JPEG или PNG';
+    return $formData;
+}
+
+/**
+ * Генерирует имя для файла и перемещеает его в указанную папку
+ * @param   array    $fileAttributes  Атрибуты файла
+ * @param   string   $uploadFolder    Название папки, в которую должен быть загружен файл
+ * @return  string                    Относительный путь файла
+ */
+function moveFile(array $fileAttributes, string $uploadFolder): string
+{
+    $fileName = uniqid() . "." . pathinfo($fileAttributes['name'], PATHINFO_EXTENSION);
+    $fileRelativePath = "$uploadFolder/" . $fileName;
+    $fileAbsolutePath = __DIR__ . "/$fileRelativePath";
+    move_uploaded_file($fileAttributes['tmp_name'], $fileAbsolutePath);
+    return $fileRelativePath;
+}
+
+/**
+ * Перемещает добавленные через форму файлы и записывает их новый адрес в данные формы
+ * @param   array   $formData          Данные формы
+ * @param   array   $fieldsRules       Правила валидации и дальнейшей обработки значений полей формы
+ * @param   array   $fieldsTypesNames  Конфиг с названиями типов полей
+ * @return  array                      Данные формы с добавленным адресом перемещения для каждого файла
+ */
+function moveFiles(array $formData, array $fieldsRules, array $fieldsTypesNames): array
+{
+    $fileTypeName = $fieldsTypesNames['fileTypeName'];
+    $fileFieldsNames = getFieldsByType($fieldsRules, $fileTypeName);
+
+    foreach ($fileFieldsNames as $fileFieldName) {
+        $fileAttributes = &$formData[$fileFieldName];
+        $uploadFolder = $fieldsRules[$fileFieldName]['uploadFolder'];
+        $fileAttributes['relativePath'] = moveFile($fileAttributes, $uploadFolder);
+    }
+
+    return $formData;
 }
