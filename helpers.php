@@ -242,170 +242,188 @@ function getErrorClassname(array $errors, string $fieldname): string
  */
 function getErrorMessage(?array $errors, string $fieldname): string
 {
-    return $errors[$fieldname] ?? '';
+    return esc($errors[$fieldname] ?? '');
+}
+
+
+
+
+
+
+/**
+ * Валидирует значение на вхождение в массив
+ * @param mixed $value Значение
+ * @param array $allowedList Допустимые значения
+ * @return string|null Сообщение об ошибке или null, если ошибки нет
+ */
+function validateInArray($value, array $allowedList): ?string
+{
+    $defaultMessage = "Выберите допустимое значение";
+
+    if (!in_array($value, $allowedList)) {
+        return $defaultMessage;
+    }
+
+    return null;
 }
 
 /**
- * Получает функцию валидации значения на вхождение в список допустимых значений
- * @param   array      $allowedList  Допустимые значения
- * @return  callable                 Функция валидации
+ * Валидирует значение на соответствие формату даты
+ * @param string $date Значение
+ * @return string|null Сообщение об ошибке или null, если ошибки нет
  */
-function getValidateAcceptability(array $allowedList): callable
+function validateDateFormat(string $date): ?string
 {
-    return function ($value, ?string $message) use ($allowedList) {
-        $defaultMessage = "Выберите допустимое значение";
+    $defaultMessage = "Укажите дату в формате ГГГГ-ММ-ДД";
 
-        if (!in_array($value, $allowedList)) {
-            return $message ?? $defaultMessage;
-        }
+    if (!isDateValid($date)) {
+        return $defaultMessage;
+    }
 
-        return null;
-    };
+    return null;
 }
 
 /**
- * Получает функцию валидации даты на соответствие формату "ГГГГ-ММ-ДД"
- * @return callable Функция валидации
+ * Валидирует дату на указанный интервал в днях от сегодня
+ * @param string $date Дата
+ * @param integer $daysInterval Интервал в днях
+ * @return string|null Сообщение об ошибке или null, если ошибки нет
  */
-function getValidateDateFormat(): callable
+function validateDateInterval(string $date, int $daysInterval): ?string
 {
-    return function (?string $date, ?string $message) {
-        $defaultMessage = "Укажите дату в формате ГГГГ-ММ-ДД";
+    $dayWordForm = getNounPluralForm($daysInterval, 'день', 'дня', 'дней');
+    $defaultMessage = "Минимум $daysInterval $dayWordForm  от сегодня";
 
-        if (!isDateValid($date)) {
-            return $message ?? $defaultMessage;
-        }
+    $dateToday = new DateTime(date("Y-m-d"));
+    $dateSelected = new DateTime($date);
+    $dateDiff = (int) $dateToday->diff($dateSelected)->format("%r%a");
 
-        return null;
-    };
+    if ($dateDiff < $daysInterval) {
+        return $defaultMessage;
+    }
+
+    return null;
 }
 
 /**
- * Получает функцию валидации даты на указанный интервал в днях от сегодня
- * @param   integer    $daysInterval  Минимальный интервал
- * @return  callable                  Функция валидации
+ * Валидирует строку на соответствие диапазону длины
+ * @param string $value Зачение
+ * @param integer|null $min Минимальная длина
+ * @param integer|null $max Максимальная длина
+ * @return string|null Сообщение об ошибке или null, если ошибки нет
  */
-function getValidateDateInterval(int $daysInterval): callable
+function validateLength(string $value, ?int $min, ?int $max = null): ?string
 {
-    return function (?string $date, ?string $message) use ($daysInterval) {
-        $dayWordForm = getNounPluralForm($daysInterval, 'день', 'дня', 'дней');
-        $defaultMessage = "Минимум $daysInterval $dayWordForm  от сегодня";
+    $length = strlen($value);
 
-        $dateToday = new DateTime(date("Y-m-d"));
-        $dateSelected = new DateTime($date);
-        $dateDiff = (int) $dateToday->diff($dateSelected)->format("%r%a");
+    if ($min !== null && $length < $min) {
+        $msg = "Количество символов должно быть не меньше $min";
+    }
 
-        if ($dateDiff < $daysInterval) {
-            return $message ?? $defaultMessage;
-        }
+    if ($max !== null && $length > $max) {
+        $msg = "Количество символов должно быть не больше $max";
+    }
 
-        return null;
-    };
+    return $msg ?? null;
 }
 
 /**
- * Получает функцию валидации строки на соответствие диапазону длины
- * @param   integer    $min  Минимальная длина
- * @param   integer    $max  Максимальная длина
- * @return  callable         Функция валидации
+ * Валидирует значение на целое число
+ * @param string $value Значение
+ * @return string|null Сообщение об ошибке или null, если ошибки нет
  */
-function getValidateLength(int $min, int $max): callable
+function validateInt(string $value): ?string
 {
-    return function (string $value, ?string $message) use ($min, $max) {
-        $defaultMessage = "Значение должно быть от $min до $max символов";
-        $length = strlen($value);
+    $defaultMessage = "Введите целое число";
 
-        if ($length >= $min && $length <= $max) {
-            return null;
-        }
+    if (filter_var($value, FILTER_VALIDATE_INT) === false) {
+        return $defaultMessage;
+    }
 
-        return $message ?? $defaultMessage;
-    };
+    return null;
 }
 
 /**
- * Получает фунцию валидации значения на положительное целое число
- * @return callable Функция валидации
+ * Валидирует значение на число
+ * @param string $value Значение
+ * @return string|null Сообщение об ошибке или null, если ошибки нет
  */
-function getValidatePositiveInt(): callable
+function validateFloat(string $value): ?string
 {
-    return function($value, ?string $message) {
-        $defaultMessage = "Укажите целое положительное число";
+    $defaultMessage = "Укажите число";
+    $value = str_replace(',', '.', $value);
 
-        $options = [
-            'options' => ['min_range' => 0],
-        ];
+    if (filter_var($value, FILTER_VALIDATE_FLOAT) === false) {
+        return $defaultMessage;
+    }
 
-        if (filter_var($value, FILTER_VALIDATE_INT, $options) !== false) {
-            return null;
-        }
-
-        return $message ?? $defaultMessage;
-    };
+    return null;
 }
 
 /**
- * Получает фунцию валидации значения на положительное число
- * @return callable Функция валидации
+ * Валидирует значениt на максимум и минимум
+ * @param string $value Значение
+ * @param float|null $min Минимальное значение
+ * @param float|null $max Максимальное значение
+ * @return string|null Сообщение об ошибке или null, если ошибки нет
  */
-function getValidatePositiveNumber(): callable
+function validateNumberRange(string $value, ?float $min, ?float $max = null): ?string
 {
-    return function($value, ?string $message): ?string {
-        $defaultMessage = "Укажите положительное число";
+    if ($min !== null && $value < $min) {
+        $msg = "Зачение должно быть больше или равно $min";
+    }
 
-        $value = str_replace(',', '.', $value);
-        $value = filter_var($value, FILTER_VALIDATE_FLOAT);
+    if ($max !== null && $value > $max) {
+        $msg = "Зачение должно быть меньше или равно $max";
+    }
 
-        if ($value !== false && $value > 0) {
-            return null;
-        }
-
-        return $message ?? $defaultMessage;
-    };
+    return $msg ?? null;
 }
 
 /**
- * Получает функцию валидации значения на максимальные длины частей числа
- * @param   integer    $wholeMax    Максимальная длина целой части
- * @param   integer    $decimalMax  Максимальная длина дробной части
- * @return  callable                Функция валидации
+ * Валидирует значение на максимальные длины частей числа
+ * @param string $value Значение
+ * @param integer $wholeMax Максимальная длина целой части
+ * @param integer $decimalMax Максимальная длина дробной части
+ * @return string|null Сообщение об ошибке или null, если ошибки нет
  */
-function getValidateDecimalLengths(int $wholeMax, int $decimalMax): callable
+function validateDecimalLengths(string $value, int $wholeMax, int $decimalMax = 0): ?string
 {
-    return function($value, ?string $message) use ($wholeMax, $decimalMax): ?string {
-        $digitWord = getNounPluralForm($wholeMax, 'знака', 'знаков', 'знаков');
-        $defaultMessage = "До&nbsp;{$wholeMax}&nbsp;{$digitWord} перед запятой&nbsp;и&nbsp;до&nbsp;{$decimalMax}&nbsp;&mdash; после";
+    $digitWord = getNounPluralForm($wholeMax, 'знака', 'знаков', 'знаков');
+    $defaultMessage = "Максимум {$wholeMax} {$digitWord} перед запятой";
+    $pattern = "/^\d{1,$wholeMax}$/";
+
+    if ($decimalMax > 0) {
+        $defaultMessage .= " и {$decimalMax} — после";
         $pattern = "/^\d{1,$wholeMax}$|^\d{1,$wholeMax}[\.\,]\d{1,$decimalMax}$/";
+    }
 
-        if (preg_match($pattern, $value)) {
-            return null;
-        }
+    if (!preg_match($pattern, $value)) {
+        return $defaultMessage;
+    }
 
-        return $message ?? $defaultMessage;
-    };
+    return null;
 }
 
 /**
- * Получает функцию валидации файла на MIME тип, расширение и размер
- *
- * @param   array      $mimeTypes    Допустимые MIME типы
- * @param   array      $extensions   Допустимые расширения
- * @param   string     $typesText    Описание допустимых форматов в текстовом виде
- * @param   integer    $maxSize      Максимальный размер в байтах
- * @return  callable                 Функция валидации
+ * Валидирует файл на MIME тип, расширение и разме
+ * @param   array         $fileAtrributes   Атрибуты файла
+ * @param   array         $mimeTypes        Допустимые MIME типы
+ * @param   array         $extensions       Допустимые расширения
+ * @param   string        $typesText        Описание допустимых форматов в текстовом виде
+ * @param   integer       $maxSize          Максимальный размер в байтах
+ * @return  string|null                     Сообщение об ошибке или null, если ошибки нет
  */
-function getValidateFile(array $mimeTypes, array $extensions, string $typesText, int $maxSize): callable
+function validateFile(array $fileAtrributes, array $mimeTypes, array $extensions, string $typesText, int $maxSize): ?string
 {
-    return function (array $fileAtrributes, ?string $message) use ($mimeTypes, $extensions, $typesText, $maxSize) {
-        $maxSizeInKb = getKilobytesValue($maxSize);
-        $defaultMessage = "Добавьте изображение $typesText до $maxSizeInKb килобайт";
+    $maxSizeInKb = getKilobytesValue($maxSize);
+    $defaultMessage = "Добавьте изображение $typesText до $maxSizeInKb килобайт";
 
-        if (isValidFormat($fileAtrributes, $mimeTypes, $extensions) && $fileAtrributes['size'] <= $maxSize) {
-            return null;
-        }
+    if (!isValidFormat($fileAtrributes, $mimeTypes, $extensions) || $fileAtrributes['size'] > $maxSize) {
+        return $defaultMessage;
+    }
 
-        return $message ?? $defaultMessage;
-    };
+    return null;
 }
 
 /**
@@ -445,7 +463,8 @@ function getFieldError(string $name, $value, ?string $requiredMessage, bool $isF
 
     if ($validators) {
         foreach ($validators as $validator) {
-            $error = $validator['function']($value, $validator['message'] ?? null);
+            $params = $validator['params'] ?? [];
+            $error = $validator['function']($value, ...$params);
 
             if ($error) {
                 return $error;

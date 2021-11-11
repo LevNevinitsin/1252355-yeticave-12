@@ -1,37 +1,24 @@
 <?php
-require __DIR__ . "/../models/information-schema-columns.php";
 $fieldsTypesNames = require __DIR__ . "/../configs/config-fields-types.php";
 
-$DB_TABLE_NAME = 'items';
-
-$DB_ITEM_NAME_COLUMN = 'item_name';
-$MIN_NAME_LENGTH = 1;
-$nameLengthLimit = getCharacterMaxLength($db, $DB_TABLE_NAME, $DB_ITEM_NAME_COLUMN);
-$maxNameLength = isset($MAX_NAME_LENGTH) ? $MAX_NAME_LENGTH : $nameLengthLimit;
+$minNameLength = null;
+$maxNameLength = 100;
 
 $categories_ids = array_column($categories, 'category_id');
 
-$IMAGE_MIMES = ['image/jpeg', 'image/png'];
-$IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png'];
-$IMAGE_TYPES_TEXT = "JPEG или PNG";
-$MAX_IMAGE_SIZE = 50000;
-$imageSizeInKbytes = getKilobytesValue($MAX_IMAGE_SIZE);
+$imageMimes = ['image/jpeg', 'image/png'];
+$imageExtensions = ['jpg', 'jpeg', 'png'];
+$imageTypesText = "JPEG или PNG";
+$maxImageSize = 50000;
 
-$DB_ITEM_PRICE_COLUMN = 'item_initial_price';
-[
-    'totalMaxLength' => $priceTotalMaxLength,
-    'decimalMaxLength' => $priceDecimalMaxLength,
-] = getDecimalMaxLengths($db, $DB_TABLE_NAME, $DB_ITEM_PRICE_COLUMN);
-$priceWholeMaxLength = $priceTotalMaxLength - $priceDecimalMaxLength;
+$priceMinValue = 0.01;
+$priceWholeMaxLength = 8;
+$priceDecimalMaxLength = 2;
 
-$DB_ITEM_BID_STEP_COLUMN = 'item_bid_step';
-[
-    'totalMaxLength' => $stepTotalMaxLength,
-    'decimalMaxLength' => $stepDecimalMaxLength,
-] = getDecimalMaxLengths($db, $DB_TABLE_NAME, $DB_ITEM_PRICE_COLUMN);
-$stepWholeMaxLength = $stepTotalMaxLength - $stepDecimalMaxLength;
+$stepMinValue = 1;
+$stepWholeMaxLength = 8;
 
-$MIN_DATE_INTERVAL = 1;
+$minDateInterval = 1;
 
 return [
     'fieldsRules' => [
@@ -39,7 +26,8 @@ return [
             'requiredMessage' => 'Введите наименование лота',
             'validators' => [
                 [
-                    'function' => getValidateLength($MIN_NAME_LENGTH, $maxNameLength),
+                    'function' => 'validateLength',
+                    'params' => [$minNameLength, $maxNameLength],
                 ],
             ],
         ],
@@ -47,8 +35,8 @@ return [
             'requiredMessage' => 'Выберите категорию',
             'validators' => [
                 [
-                    'function' => getValidateAcceptability($categories_ids),
-                    'message' => "Выберите категорию из списка",
+                    'function' => 'validateInArray',
+                    'params' => [$categories_ids],
                 ],
             ],
         ],
@@ -58,10 +46,11 @@ return [
         ],
         'image' => [
             'type' => $fieldsTypesNames['fileTypeName'],
-            'requiredMessage' => "Добавьте изображение $IMAGE_TYPES_TEXT до {$imageSizeInKbytes}Кб",
+            'requiredMessage' => "Добавьте изображение $imageTypesText до $maxImageSize байт",
             'validators' => [
                 [
-                    'function' => getValidateFile($IMAGE_MIMES, $IMAGE_EXTENSIONS, $IMAGE_TYPES_TEXT, $MAX_IMAGE_SIZE),
+                    'function' => 'validateFile',
+                    'params' => [$imageMimes, $imageExtensions, $imageTypesText, $maxImageSize],
                 ],
             ],
             'uploadFolder' => 'uploads',
@@ -71,10 +60,15 @@ return [
             'requiredMessage' => 'Введите начальную цену',
             'validators' => [
                 [
-                    'function' => getValidatePositiveNumber(),
+                    'function' => 'validateFloat',
                 ],
                 [
-                    'function' => getValidateDecimalLengths($priceWholeMaxLength, $priceDecimalMaxLength),
+                    'function' => 'validateNumberRange',
+                    'params' => [$priceMinValue],
+                ],
+                [
+                    'function' => 'validateDecimalLengths',
+                    'params' => [$priceWholeMaxLength, $priceDecimalMaxLength],
                 ],
             ],
         ],
@@ -82,11 +76,15 @@ return [
             'requiredMessage' => 'Введите шаг ставки',
             'validators' => [
                 [
-                    'function' => getValidatePositiveInt(),
+                    'function' => 'validateInt',
                 ],
                 [
-                    'function' => getValidateDecimalLengths($stepWholeMaxLength, $stepDecimalMaxLength),
-                    'message' => "До $priceWholeMaxLength знаков",
+                    'function' => 'validateNumberRange',
+                    'params' => [$stepMinValue],
+                ],
+                [
+                    'function' => 'validateDecimalLengths',
+                    'params' => [$stepWholeMaxLength],
                 ],
             ],
         ],
@@ -94,10 +92,11 @@ return [
             'requiredMessage' => 'Введите дату завершения торгов',
             'validators' => [
                 [
-                    'function' => getValidateDateFormat(),
+                    'function' => 'validateDateFormat',
                 ],
                 [
-                    'function' => getValidateDateInterval($MIN_DATE_INTERVAL),
+                    'function' => 'validateDateInterval',
+                    'params' => [$minDateInterval],
                 ],
             ],
         ],
