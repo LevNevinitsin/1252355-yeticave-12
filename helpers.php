@@ -245,11 +245,6 @@ function getErrorMessage(?array $errors, string $fieldname): string
     return esc($errors[$fieldname] ?? '');
 }
 
-
-
-
-
-
 /**
  * Валидирует значение на вхождение в массив
  * @param mixed $value Значение
