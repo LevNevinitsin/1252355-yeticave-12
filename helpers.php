@@ -3,17 +3,17 @@
  * Проверяет переданную дату на соответствие формату 'ГГГГ-ММ-ДД'
  *
  * Примеры использования:
- * is_date_valid('2019-01-01'); // true
- * is_date_valid('2016-02-29'); // true
- * is_date_valid('2019-04-31'); // false
- * is_date_valid('10.10.2010'); // false
- * is_date_valid('10/10/2010'); // false
+ * isDateValid('2019-01-01'); // true
+ * isDateValid('2016-02-29'); // true
+ * isDateValid('2019-04-31'); // false
+ * isDateValid('10.10.2010'); // false
+ * isDateValid('10/10/2010'); // false
  *
  * @param string $date Дата в виде строки
  *
  * @return bool true при совпадении с форматом 'ГГГГ-ММ-ДД', иначе false
  */
-function is_date_valid(string $date) : bool {
+function isDateValid(string $date) : bool {
     $format_to_check = 'Y-m-d';
     $dateTimeObj = date_create_from_format($format_to_check, $date);
 
@@ -81,7 +81,7 @@ function dbGetPrepareStmt($link, $sql, $data = []) {
  * Пример использования:
  * $remaining_minutes = 5;
  * echo "Я поставил таймер на {$remaining_minutes} " .
- *     get_noun_plural_form(
+ *     getNounPluralForm(
  *         $remaining_minutes,
  *         'минута',
  *         'минуты',
@@ -89,14 +89,14 @@ function dbGetPrepareStmt($link, $sql, $data = []) {
  *     );
  * Результат: "Я поставил таймер на 5 минут"
  *
- * @param int $number Число, по которому вычисляем форму множественного числа
- * @param string $one Форма единственного числа: яблоко, час, минута
- * @param string $two Форма множественного числа для 2, 3, 4: яблока, часа, минуты
- * @param string $many Форма множественного числа для остальных чисел
+ * @param   int      $number  Число, по которому вычисляем форму множественного числа
+ * @param   string   $one     Форма единственного числа: яблоко, час, минута
+ * @param   string   $two     Форма множественного числа для 2, 3, 4: яблока, часа, минуты
+ * @param   string   $many    Форма множественного числа для остальных чисел
  *
- * @return string Рассчитанная форма множественнго числа
+ * @return  string            Рассчитанная форма множественнго числа
  */
-function get_noun_plural_form (int $number, string $one, string $two, string $many): string
+function getNounPluralForm(int $number, string $one, string $two, string $many): string
 {
     $number = (int) $number;
     $mod10 = $number % 10;
@@ -122,9 +122,9 @@ function get_noun_plural_form (int $number, string $one, string $two, string $ma
 
 /**
  * Подключает шаблон, передает туда данные и возвращает итоговый HTML контент
- * @param string $name Путь к файлу шаблона относительно папки templates
- * @param array $data Ассоциативный массив с данными для шаблона
- * @return string Итоговый HTML
+ * @param   string   $name  Путь к файлу шаблона относительно папки templates
+ * @param   array    $data  Ассоциативный массив с данными для шаблона
+ * @return  string          Итоговый HTML
  */
 function includeTemplate(string $name, array $data = [])
 {
@@ -139,8 +139,8 @@ function includeTemplate(string $name, array $data = [])
 
 /**
  * Принимает цену и возвращает её в формате '12 000 ₽'
- * @param float $price Цена
- * @return string Отформатированная цена
+ * @param   float    $price  Цена
+ * @return  string           Отформатированная цена
  */
 function formatPrice(float $price): string
 {
@@ -150,8 +150,8 @@ function formatPrice(float $price): string
 
 /**
  * Принимает строку и возвращает её экранированном для HTML виде
- * @param string|null $text Данные, которые хотим отобразить в HTML
- * @return string Экранированные данные
+ * @param   string|null   $text  Данные, которые хотим отобразить в HTML
+ * @return  string               Экранированные данные
  */
 function esc(?string $text): string
 {
@@ -160,8 +160,8 @@ function esc(?string $text): string
 
 /**
  * Принимает дату истечения лота и возвращает оставшееся до неё время
- * @param string $expireDate Дата истечения лота
- * @return array Оставшееся до истечения лота время в виде массива [ЧЧ, ММ]
+ * @param   string   $expireDate  Дата истечения лота
+ * @return  array                 Оставшееся до истечения лота время в виде массива [ЧЧ, ММ]
  */
 function getRemainingTime(string $expireDate): array
 {
@@ -173,14 +173,14 @@ function getRemainingTime(string $expireDate): array
 
 /**
  * Принимает шаблон страницы, данные для него и для лейаута и возвращает полный HTML страницы
- * @param string    $pageTemplate   Путь к файлу шаблона относительно папки templates
- * @param array     $pageData       Ассоциативный массив с данными для шаблона
- * @param array     $categories     Ассоциативный массив с категориями товаров
- * @param integer   $isAuth         Число 1 либо 0, отображающее статус авторизации пользователя
- * @param string    $userName       Имя пользователя
- * @param string    $title          Содержимое для тега <title>
- * @param boolean   $isIndexPage    Является ли страница главной
- * @return string                   Полный HTML страницы
+ * @param   string    $pageTemplate   Путь к файлу шаблона относительно папки templates
+ * @param   array     $pageData       Ассоциативный массив с данными для шаблона
+ * @param   array     $categories     Ассоциативный массив с категориями товаров
+ * @param   integer   $isAuth         Число 1 либо 0, отображающее статус авторизации пользователя
+ * @param   string    $userName       Имя пользователя
+ * @param   string    $title          Содержимое для тега <title>
+ * @param   boolean   $isIndexPage    Является ли страница главной
+ * @return  string                    Полный HTML страницы
  */
 function getHTML(string $pageTemplate, array $pageData, array $categories, int $isAuth, string $userName, string $title, bool $isIndexPage = false): string
 {
@@ -196,9 +196,73 @@ function getHTML(string $pageTemplate, array $pageData, array $categories, int $
     return includeTemplate('layout.php', $layoutData);
 }
 
-function render404(array $categories, int $isAuth, string $userName): string
+/**
+ * Передает код ошибки 404, выводит HTML для страницы 404 и завершает скрипт.
+ * @param  array     $categories  Ассоциативный массив с категориями товаров
+ * @param  integer   $isAuth      Число 1 либо 0, отображающее статус авторизации пользователя
+ * @param  string    $userName    Имя пользователя
+ */
+function render404(array $categories, int $isAuth, string $userName)
 {
     http_response_code(404);
     echo getHtml('404.php', ['categories' => $categories], $categories, $isAuth, $userName, 'Страница не найдена');
     exit;
+}
+
+/**
+ * Получает экранированное значение поля
+ * @param   string        $fieldname  Имя поля
+ * @return  string|null               Экранированное значение поля (если было)
+ */
+function getPostVal(array $formData, string $fieldname): ?string
+{
+    return esc($formData[$fieldname] ?? '');
+}
+
+/**
+ * Получает имя класса-модификатора для поля, если есть ошибка валидации
+ * @param   array    $errors     Массив с ошибками
+ * @param   string   $fieldname  Имя поля
+ * @return  string               Имя класса или пустая строка, если ошибки нет
+ */
+function getErrorClassname(array $errors, string $fieldname): string
+{
+    return isset($errors[$fieldname]) ? 'form__item--invalid' : '';
+}
+
+/**
+ * Получает сообщение об ошибке валидации поля
+ * @param   array|null   $errors     Массив с ошибками
+ * @param   string       $fieldname  Имя поля
+ * @return  string                   Сообщение об ошибке или пустая строка, если ошибки нет
+ */
+function getErrorMessage(?array $errors, string $fieldname): string
+{
+    return esc($errors[$fieldname] ?? '');
+}
+
+/**
+ * Заменяет запятую на точку в значении
+ *
+ * @param   string   $value  Исходное значение
+ * @return  string           Значение с заменой
+ */
+function formatDecimalValues(string $value): string
+{
+    return str_replace(',', '.', $value);
+}
+
+/**
+ * Генерирует имя для файла и перемещеает его в указанную папку
+ * @param   array   $fileAttributes  Атрибуты файла
+ * @param   string  $uploadFolder    Название папки, в которую должен быть загружен файл
+ * @return  string                   Путь к файлу
+ */
+function moveFile(array $fileAttributes, string $uploadFolder = 'uploads'): string
+{
+    $fileName = uniqid() . "." . pathinfo($fileAttributes['name'], PATHINFO_EXTENSION);
+    $webPath = "/{$uploadFolder}/$fileName";
+    $fullPath = __DIR__ . $webPath;
+    move_uploaded_file($fileAttributes['tmp_name'], $fullPath);
+    return $webPath;
 }

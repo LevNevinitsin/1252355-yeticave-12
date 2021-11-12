@@ -1,11 +1,11 @@
 <?php
 /**
  * Возращает список категорий
- * @param object $db Объект mysqli
+ * @param mysqli $db Объект класса mysqli
  * @return array Ассоциативный массив с данными категорий
  */
-function getCategories(object $db): array
+function getCategories(mysqli $db): array
 {
-    $sql = "SELECT category_name, category_code FROM categories";
+    $sql = "SELECT category_id, category_name, category_code FROM categories";
     return $db->query($sql)->fetch_all(MYSQLI_ASSOC);
 }
