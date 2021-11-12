@@ -56,8 +56,6 @@ function validateScalar($value, string $message = 'Введите число и�
  */
 function validateInArray($value, array $allowedList, string $message = "Выберите допустимое значение"): ?string
 {
-
-
     if (!in_array($value, $allowedList)) {
         return $message;
     }
@@ -120,7 +118,7 @@ function validateFloat($value, string $message = "Введите число"): ?
 }
 
 /**
- * Валидирует значениt на максимум и минимум
+ * Валидирует значение на максимум и минимум
  * @param   mixed        $value  Значение
  * @param   float|null   $min    Минимальное значение
  * @param   float|null   $max    Максимальное значение
@@ -211,6 +209,47 @@ function validateDateInterval(string $date, ?string $min, ?string $max = null): 
 }
 
 /**
+ * Валидирует файл на принадлежность к одному из указанных MIME типов и
+ * наличие у него нужного расширения.
+ *
+ * @param   string       $path        Путь к файлу
+ * @param   string       $name        Имя файла
+ * @param   array        $mimeTypes   Допустимые MIME типы
+ * @param   array        $extensions  Допустимые расширения
+ * @return  string|null               Сообщение об ошибке или null, если ошибки нет
+ */
+function validateFileFormat(string $path, string $name, array $mimeTypes, array $extensions): ?string
+{
+    $typesText = implode(', ', $extensions);
+    $message = "Допустимые форматы: $typesText";
+    $finfo = new finfo(FILEINFO_MIME_TYPE);
+    $fileType = $finfo->file($path);
+    $fileExtension = pathinfo($name, PATHINFO_EXTENSION);
+
+    if (!in_array($fileType, $mimeTypes, true) || !in_array(strtolower($fileExtension), $extensions, true)) {
+        return $message;
+    }
+
+    return null;
+}
+
+/**
+ * Валидирует файл на максимальный размер
+ * @param   string       $path     Путь к файлу
+ * @param   integer      $maxSize  Максимальный размер
+ * @return  string|null            Сообщение об ошибке или null, если ошибки нет
+ */
+function validateFileSize(string $path, int $maxSize): ?string
+{
+    if (filesize($path) > $maxSize) {
+        return "Размер файла не должен превышать $maxSize байт";
+    }
+
+    return null;
+}
+
+// TODO: ренейм? а то непонятно, что мы завязаны на $_FILES
+/**
  * Валидирует файл на MIME тип, расширение и разме
  * @param   array        $fileAtrributes  Атрибуты файла
  * @param   array        $mimeTypes       Допустимые MIME типы
@@ -220,36 +259,13 @@ function validateDateInterval(string $date, ?string $min, ?string $max = null): 
  */
 function validateFile(array $fileAtrributes, array $mimeTypes, array $extensions, int $maxSize): ?string
 {
-    $maxSizeInKb = getKilobytesValue($maxSize);
-    $typesText = implode($extensions, ', ');
-
-    if (!isValidFormat($fileAtrributes, $mimeTypes, $extensions) || $fileAtrributes['size'] > $maxSize) {
-        return "Добавьте изображение $typesText до $maxSizeInKb килобайт";
-    }
-
-    return null;
-}
-
-/**
- * Проверяет принадлежность файла к одному из указанных MIME типов и
- * наличие у него нужного расширения.
- *
- * @param   array    $fileAttributes  Массив с атрибутами файла
- * @param   array    $mimeTypes       Допустимые MIME типы
- * @param   array    $extensions      Допустимые расширения
- * @return  boolean                   true, если у файла нужные MIME тип и расширение; иначе false
- */
-function isValidFormat(?array $fileAttributes, array $mimeTypes, array $extensions): bool
-{
-    $finfo = new finfo(FILEINFO_MIME_TYPE);
-    $fileType = $finfo->file($fileAttributes['tmp_name']);
-    $fileExtension = pathinfo($fileAttributes['name'], PATHINFO_EXTENSION);
-    return in_array($fileType, $mimeTypes, true) && in_array(strtolower($fileExtension), $extensions, true);
+    $path = $fileAtrributes['tmp_name'];
+    $name = $fileAtrributes['name'];
+    return validateFileFormat($path, $name, $mimeTypes, $extensions) ?? validateFileSize($path, $maxSize);
 }
 
 /**
  * Получает ошибку валидации поля, используя настройки из конфига
- *
  * @param   mixed        $value       Значение поля
  * @param   array        $validators  Массив с функциями-валидаторами
  * @return  string|null               Текст ошибки
@@ -280,8 +296,7 @@ function getFormErrors(array $formData, array $fieldsRules): array
     $errors = [];
 
     foreach ($fieldsRules as $fieldName => $validators) {
-        $value = $formData[$fieldName] ?? null;
-
+        $value = $formData[$fieldName] ?? null; // TODO: А если придет null из json'a?
         $errors[$fieldName] = getFieldError($value, $validators);
     }
 

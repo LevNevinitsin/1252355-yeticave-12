@@ -148,10 +148,6 @@ function formatPrice(float $price): string
     return number_format($price, 0, '', ' ') . ' ₽';
 }
 
-function getKilobytesValue(int $bytesValue): int {
-    return floor($bytesValue / 1024);
-}
-
 /**
  * Принимает строку и возвращает её экранированном для HTML виде
  * @param   string|null   $text  Данные, которые хотим отобразить в HTML
@@ -260,29 +256,13 @@ function formatDecimalValues(string $value): string
  * Генерирует имя для файла и перемещеает его в указанную папку
  * @param   array   $fileAttributes  Атрибуты файла
  * @param   string  $uploadFolder    Название папки, в которую должен быть загружен файл
- * @return  string                   Относительный путь файла
+ * @return  string                   Путь к файлу
  */
 function moveFile(array $fileAttributes, string $uploadFolder = 'uploads'): string
 {
     $fileName = uniqid() . "." . pathinfo($fileAttributes['name'], PATHINFO_EXTENSION);
-    $fileRelativePath = "$uploadFolder/" . $fileName;
-    $fileAbsolutePath = __DIR__ . "/$fileRelativePath";
-    move_uploaded_file($fileAttributes['tmp_name'], $fileAbsolutePath);
-    return $fileRelativePath;
-}
-
-/**
- * Перемещает добавленные через форму файлы и записывает их новый адрес в данные формы
- * @param   array  $formData  Данные формы
- * @return  array             Данные формы с добавленным адресом перемещения для каждого файла
- */
-function moveFiles(array $formData): array
-{
-    foreach ($formData as $fieldname => $value) {
-        if (isset($value['tmp_name'])) {
-            $formData[$fieldname]['relativePath'] = moveFile($value);
-        }
-    }
-
-    return $formData;
+    $webPath = "/{$uploadFolder}/$fileName";
+    $fullPath = __DIR__ . $webPath;
+    move_uploaded_file($fileAttributes['tmp_name'], $fullPath);
+    return $webPath;
 }

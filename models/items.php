@@ -93,7 +93,7 @@ function insertItem(mysqli $db, array $formData)
         "sssssss",
         $formData['lot-name'],
         $formData['description'],
-        $formData['image']['relativePath'],
+        $formData['image']['webPath'],
         $formData['lot-rate'],
         $formData['lot-step'],
         $formData['category_id'],
