@@ -1,12 +1,9 @@
 <?php
 require __DIR__ . '/initialize.php';
-require __DIR__ . '/models/items.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $fieldsTypesNames = [
-        'decimalTypeName' => 'decimal',
-        'fileTypeName' => 'file',
-    ];
+    require __DIR__ . '/validators.php';
+    require __DIR__ . '/models/items.php';
 
     $minNameLength = null;
     $maxNameLength = 100;
@@ -15,7 +12,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $imageMimes = ['image/jpeg', 'image/png'];
     $imageExtensions = ['jpg', 'jpeg', 'png'];
-    $imageTypesText = "JPEG или PNG";
     $maxImageSize = 50000;
 
     $priceMinValue = 0.01;
@@ -25,97 +21,55 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stepMinValue = 1;
     $stepWholeMaxLength = 8;
 
-    $minDateInterval = 1;
+    $minDate = 'tomorrow';
 
     $fieldsRules = [
         'lot-name' => [
-            'requiredMessage' => 'Введите наименование лота',
-            'validators' => [
-                [
-                    'function' => 'validateLength',
-                    'params' => [$minNameLength, $maxNameLength],
-                ],
-            ],
+            ['validateRequired', ['Введите наименование лота']],
+            ['validateScalar'],
+            ['validateLength', [$minNameLength, $maxNameLength]],
         ],
         'category_id' => [
-            'requiredMessage' => 'Выберите категорию',
-            'validators' => [
-                [
-                    'function' => 'validateInArray',
-                    'params' => [$categories_ids],
-                ],
-            ],
+            ['validateRequired', ['Выберите категорию']],
+            ['validateScalar'],
+            ['validateInArray', [$categories_ids]],
         ],
         'description' => [
-            'requiredMessage' => 'Напишите описание лота',
-            'validators' => [],
+            ['validateRequired', ['Введите описание лота']],
+            ['validateScalar'],
         ],
         'image' => [
-            'type' => $fieldsTypesNames['fileTypeName'],
-            'requiredMessage' => "Добавьте изображение $imageTypesText до $maxImageSize байт",
-            'validators' => [
-                [
-                    'function' => 'validateFile',
-                    'params' => [$imageMimes, $imageExtensions, $imageTypesText, $maxImageSize],
-                ],
-            ],
-            'uploadFolder' => 'uploads',
+            ['validateRequiredFile', ['Добавьте изображение']],
+            ['validateFile', [$imageMimes, $imageExtensions, $maxImageSize]],
         ],
         'lot-rate' => [
-            'type' => $fieldsTypesNames['decimalTypeName'],
-            'requiredMessage' => 'Введите начальную цену',
-            'validators' => [
-                [
-                    'function' => 'validateFloat',
-                ],
-                [
-                    'function' => 'validateNumberRange',
-                    'params' => [$priceMinValue],
-                ],
-                [
-                    'function' => 'validateDecimalLengths',
-                    'params' => [$priceWholeMaxLength, $priceDecimalMaxLength],
-                ],
-            ],
+            ['validateRequired', ['Введите начальную цену']],
+            ['validateFloat'],
+            ['validateNumberRange', [$priceMinValue]],
+            ['validateDecimalLengths', [$priceWholeMaxLength, $priceDecimalMaxLength]],
         ],
         'lot-step' => [
-            'requiredMessage' => 'Введите шаг ставки',
-            'validators' => [
-                [
-                    'function' => 'validateInt',
-                ],
-                [
-                    'function' => 'validateNumberRange',
-                    'params' => [$stepMinValue],
-                ],
-                [
-                    'function' => 'validateDecimalLengths',
-                    'params' => [$stepWholeMaxLength],
-                ],
-            ],
+            ['validateRequired', ['Введите шаг ставки']],
+            ['validateInt'],
+            ['validateNumberRange', [$stepMinValue]],
+            ['validateDecimalLengths', [$stepWholeMaxLength]],
         ],
         'lot-date' => [
-            'requiredMessage' => 'Введите дату завершения торгов',
-            'validators' => [
-                [
-                    'function' => 'validateDateFormat',
-                ],
-                [
-                    'function' => 'validateDateInterval',
-                    'params' => [$minDateInterval],
-                ],
-            ],
+            ['validateRequired', ['Введите дату завершения торгов']],
+            ['validateScalar'],
+            ['validateDateFormat'],
+            ['validateDateInterval', [$minDate]]
         ],
     ];
 
     $formData = array_merge($_POST, $_FILES);
-    $errors = getFormErrors($formData, $fieldsRules, $fieldsTypesNames);
+    $errors = getFormErrors($formData, $fieldsRules);
 
     if (!count($errors)) {
-        $formData = formatDecimalValues($formData, $fieldsRules, $fieldsTypesNames);
-        $formData = moveFiles($formData, $fieldsRules, $fieldsTypesNames);
-        insertItem($db, $formData);
-        header("Location: //{$_SERVER['SERVER_NAME']}/lot.php?item_id=" . $db->insert_id);
+        $formData['lot-rate'] = formatDecimalValues($formData['lot-rate']);
+        $formData = moveFiles($formData, $fieldsRules);
+        $itemId = insertItem($db, $formData);
+        header("Location: //{$_SERVER['SERVER_NAME']}/lot.php?item_id=" . $itemId);
     }
 }
 

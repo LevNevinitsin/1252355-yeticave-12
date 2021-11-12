@@ -246,295 +246,23 @@ function getErrorMessage(?array $errors, string $fieldname): string
 }
 
 /**
- * Валидирует значение на вхождение в массив
- * @param mixed $value Значение
- * @param array $allowedList Допустимые значения
- * @return string|null Сообщение об ошибке или null, если ошибки нет
- */
-function validateInArray($value, array $allowedList): ?string
-{
-    $defaultMessage = "Выберите допустимое значение";
-
-    if (!in_array($value, $allowedList)) {
-        return $defaultMessage;
-    }
-
-    return null;
-}
-
-/**
- * Валидирует значение на соответствие формату даты
- * @param string $date Значение
- * @return string|null Сообщение об ошибке или null, если ошибки нет
- */
-function validateDateFormat(string $date): ?string
-{
-    $defaultMessage = "Укажите дату в формате ГГГГ-ММ-ДД";
-
-    if (!isDateValid($date)) {
-        return $defaultMessage;
-    }
-
-    return null;
-}
-
-/**
- * Валидирует дату на указанный интервал в днях от сегодня
- * @param string $date Дата
- * @param integer $daysInterval Интервал в днях
- * @return string|null Сообщение об ошибке или null, если ошибки нет
- */
-function validateDateInterval(string $date, int $daysInterval): ?string
-{
-    $dayWordForm = getNounPluralForm($daysInterval, 'день', 'дня', 'дней');
-    $defaultMessage = "Минимум $daysInterval $dayWordForm  от сегодня";
-
-    $dateToday = new DateTime(date("Y-m-d"));
-    $dateSelected = new DateTime($date);
-    $dateDiff = (int) $dateToday->diff($dateSelected)->format("%r%a");
-
-    if ($dateDiff < $daysInterval) {
-        return $defaultMessage;
-    }
-
-    return null;
-}
-
-/**
- * Валидирует строку на соответствие диапазону длины
- * @param string $value Зачение
- * @param integer|null $min Минимальная длина
- * @param integer|null $max Максимальная длина
- * @return string|null Сообщение об ошибке или null, если ошибки нет
- */
-function validateLength(string $value, ?int $min, ?int $max = null): ?string
-{
-    $length = strlen($value);
-
-    if ($min !== null && $length < $min) {
-        $msg = "Количество символов должно быть не меньше $min";
-    }
-
-    if ($max !== null && $length > $max) {
-        $msg = "Количество символов должно быть не больше $max";
-    }
-
-    return $msg ?? null;
-}
-
-/**
- * Валидирует значение на целое число
- * @param string $value Значение
- * @return string|null Сообщение об ошибке или null, если ошибки нет
- */
-function validateInt(string $value): ?string
-{
-    $defaultMessage = "Введите целое число";
-
-    if (filter_var($value, FILTER_VALIDATE_INT) === false) {
-        return $defaultMessage;
-    }
-
-    return null;
-}
-
-/**
- * Валидирует значение на число
- * @param string $value Значение
- * @return string|null Сообщение об ошибке или null, если ошибки нет
- */
-function validateFloat(string $value): ?string
-{
-    $defaultMessage = "Укажите число";
-    $value = str_replace(',', '.', $value);
-
-    if (filter_var($value, FILTER_VALIDATE_FLOAT) === false) {
-        return $defaultMessage;
-    }
-
-    return null;
-}
-
-/**
- * Валидирует значениt на максимум и минимум
- * @param string $value Значение
- * @param float|null $min Минимальное значение
- * @param float|null $max Максимальное значение
- * @return string|null Сообщение об ошибке или null, если ошибки нет
- */
-function validateNumberRange(string $value, ?float $min, ?float $max = null): ?string
-{
-    if ($min !== null && $value < $min) {
-        $msg = "Зачение должно быть больше или равно $min";
-    }
-
-    if ($max !== null && $value > $max) {
-        $msg = "Зачение должно быть меньше или равно $max";
-    }
-
-    return $msg ?? null;
-}
-
-/**
- * Валидирует значение на максимальные длины частей числа
- * @param string $value Значение
- * @param integer $wholeMax Максимальная длина целой части
- * @param integer $decimalMax Максимальная длина дробной части
- * @return string|null Сообщение об ошибке или null, если ошибки нет
- */
-function validateDecimalLengths(string $value, int $wholeMax, int $decimalMax = 0): ?string
-{
-    $digitWord = getNounPluralForm($wholeMax, 'знака', 'знаков', 'знаков');
-    $defaultMessage = "Максимум {$wholeMax} {$digitWord} перед запятой";
-    $pattern = "/^\d{1,$wholeMax}$/";
-
-    if ($decimalMax > 0) {
-        $defaultMessage .= " и {$decimalMax} — после";
-        $pattern = "/^\d{1,$wholeMax}$|^\d{1,$wholeMax}[\.\,]\d{1,$decimalMax}$/";
-    }
-
-    if (!preg_match($pattern, $value)) {
-        return $defaultMessage;
-    }
-
-    return null;
-}
-
-/**
- * Валидирует файл на MIME тип, расширение и разме
- * @param   array         $fileAtrributes   Атрибуты файла
- * @param   array         $mimeTypes        Допустимые MIME типы
- * @param   array         $extensions       Допустимые расширения
- * @param   string        $typesText        Описание допустимых форматов в текстовом виде
- * @param   integer       $maxSize          Максимальный размер в байтах
- * @return  string|null                     Сообщение об ошибке или null, если ошибки нет
- */
-function validateFile(array $fileAtrributes, array $mimeTypes, array $extensions, string $typesText, int $maxSize): ?string
-{
-    $maxSizeInKb = getKilobytesValue($maxSize);
-    $defaultMessage = "Добавьте изображение $typesText до $maxSizeInKb килобайт";
-
-    if (!isValidFormat($fileAtrributes, $mimeTypes, $extensions) || $fileAtrributes['size'] > $maxSize) {
-        return $defaultMessage;
-    }
-
-    return null;
-}
-
-/**
- * Проверяет принадлежность файла к одному из указанных MIME типов и
- * наличие у него нужного расширения.
+ * Заменяет запятую на точку в значении
  *
- * @param   array     $fileAttributes  Массив с атрибутами файла
- * @param   array     $mimeTypes       Допустимые MIME типы
- * @param   array     $extensions      Допустимые расширения
- * @return  boolean                    true, если у файла нужные MIME тип и расширение; иначе false
+ * @param   string   $value  Исходное значение
+ * @return  string           Значение с заменой
  */
-function isValidFormat(array $fileAttributes, array $mimeTypes, array $extensions): bool
+function formatDecimalValues(string $value): string
 {
-    $finfo = new finfo(FILEINFO_MIME_TYPE);
-    $fileType = $finfo->file($fileAttributes['tmp_name']);
-    $fileExtension = pathinfo($fileAttributes['name'], PATHINFO_EXTENSION);
-    return in_array($fileType, $mimeTypes, true) && in_array($fileExtension, $extensions, true);
-}
-
-/**
- * Получает ошибку валидации поля, используя настройки из конфига
- *
- * @param   string        $name               Имя поля
- * @param   mixed         $value              Значение поля
- * @param   string|null   $requiredMessage    Сообщение на случай, если поле обязательно, но не заполнено
- * @param   bool          $isFile             Является ли файловым полем
- * @param   array|null    $validators         Массив с функциями-валидаторами
- * @return  string|null                       Текст ошибки
- */
-function getFieldError(string $name, $value, ?string $requiredMessage, bool $isFile, ?array $validators): ?string
-{
-    if ($requiredMessage) {
-        if (($isFile && empty($value['name'])) || (!$isFile && empty($value))) {
-            return $requiredMessage;
-        }
-    }
-
-    if ($validators) {
-        foreach ($validators as $validator) {
-            $params = $validator['params'] ?? [];
-            $error = $validator['function']($value, ...$params);
-
-            if ($error) {
-                return $error;
-            }
-        }
-    }
-
-    return null;
-}
-
-/**
- * Получает ошибки валидации данных из формы, используя настройки из конфига
- * @param   array   $formData          Данные формы
- * @param   array   $fieldsRules       Правила валидации и дальнейшей обработки значений полей формы
- * @param   array   $fieldsTypesNames  Конфиг с названиями типов полей
- * @return  array                      Массив с информацией об ошибках
- */
-function getFormErrors(array $formData, array $fieldsRules, array $fieldsTypesNames): array
-{
-    $errors = [];
-
-    foreach ($formData as $name => $value) {
-        $fieldRules = $fieldsRules[$name];
-        $validators = $fieldRules['validators'] ?? null;
-        $requiredMessage = $fieldRules['requiredMessage'] ?? null;
-        $type = $fieldRules['type'] ?? false;
-        $isFile = $type === $fieldsTypesNames['fileTypeName'];
-        $errors[$name] = getFieldError($name, $value, $requiredMessage, $isFile, $validators);
-    }
-
-    return array_filter($errors);
-}
-
-/**
- * Получает имена полей указанного типа из конфига валидации формы
- * @param   array    $fieldsRules  Конфиг валидации и дальнейшей обработки значений полей формы
- * @param   string   $type         Тип поля
- * @return  array                  Поля укзанного типа
- */
-function getFieldsByType(array $fieldsRules, string $type): array
-{
-    $wantedFields = array_filter($fieldsRules, function($fieldConfig) use ($type) {
-        return ($fieldConfig['type'] ?? null) === $type;
-    });
-
-    $wantedFieldsNames = array_keys($wantedFields);
-    return $wantedFieldsNames;
-}
-
-/**
- * Заменяет запятую на точку в значениях полей, принимающих дробные числа
- * @param   array   $formData          Данные формы
- * @param   array   $fieldsRules       Правила валидации и дальнейшей обработки значений полей формы
- * @param   array   $fieldsTypesNames  Конфиг с названиями типов полей
- * @return  array                      Обновлённые данные формы
- */
-function formatDecimalValues(array $formData, array $fieldsRules, array $fieldsTypesNames): array
-{
-    $decimalTypeName = $fieldsTypesNames['decimalTypeName'];
-    $decimalFieldsNames = getFieldsByType($fieldsRules, $decimalTypeName);
-
-    foreach ($decimalFieldsNames as $decimalFieldName) {
-        $formData[$decimalFieldName] = str_replace(',', '.', $formData[$decimalFieldName]);
-    }
-
-    return $formData;
+    return str_replace(',', '.', $value);
 }
 
 /**
  * Генерирует имя для файла и перемещеает его в указанную папку
- * @param   array    $fileAttributes  Атрибуты файла
- * @param   string   $uploadFolder    Название папки, в которую должен быть загружен файл
- * @return  string                    Относительный путь файла
+ * @param   array   $fileAttributes  Атрибуты файла
+ * @param   string  $uploadFolder    Название папки, в которую должен быть загружен файл
+ * @return  string                   Относительный путь файла
  */
-function moveFile(array $fileAttributes, string $uploadFolder): string
+function moveFile(array $fileAttributes, string $uploadFolder = 'uploads'): string
 {
     $fileName = uniqid() . "." . pathinfo($fileAttributes['name'], PATHINFO_EXTENSION);
     $fileRelativePath = "$uploadFolder/" . $fileName;
@@ -545,20 +273,15 @@ function moveFile(array $fileAttributes, string $uploadFolder): string
 
 /**
  * Перемещает добавленные через форму файлы и записывает их новый адрес в данные формы
- * @param   array   $formData          Данные формы
- * @param   array   $fieldsRules       Правила валидации и дальнейшей обработки значений полей формы
- * @param   array   $fieldsTypesNames  Конфиг с названиями типов полей
- * @return  array                      Данные формы с добавленным адресом перемещения для каждого файла
+ * @param   array  $formData  Данные формы
+ * @return  array             Данные формы с добавленным адресом перемещения для каждого файла
  */
-function moveFiles(array $formData, array $fieldsRules, array $fieldsTypesNames): array
+function moveFiles(array $formData): array
 {
-    $fileTypeName = $fieldsTypesNames['fileTypeName'];
-    $fileFieldsNames = getFieldsByType($fieldsRules, $fileTypeName);
-
-    foreach ($fileFieldsNames as $fileFieldName) {
-        $fileAttributes = &$formData[$fileFieldName];
-        $uploadFolder = $fieldsRules[$fileFieldName]['uploadFolder'];
-        $fileAttributes['relativePath'] = moveFile($fileAttributes, $uploadFolder);
+    foreach ($formData as $fieldname => $value) {
+        if (isset($value['tmp_name'])) {
+            $formData[$fieldname]['relativePath'] = moveFile($value);
+        }
     }
 
     return $formData;

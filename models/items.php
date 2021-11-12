@@ -100,4 +100,6 @@ function insertItem(mysqli $db, array $formData)
         $formData['lot-date']
     );
     $stmt->execute();
+
+    return $db->insert_id;
 }
