@@ -10,6 +10,7 @@ $config = require $configPath;
 require __DIR__ . '/models/categories.php';
 require __DIR__ . '/helpers.php';
 
+date_default_timezone_set('Europe/Moscow');
 $isAuth = rand(0, 1);
 $userName = 'Лев';
 
