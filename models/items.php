@@ -1,11 +1,10 @@
 <?php
 /**
- * Возвращает лот по его id
- * @param mysqli $db Объект с базой данных
- * @param integer $itemId id лота
- * @return array|null Ассоциативный массив с данными лота
+ * Получает лот по его id
+ * @param   mysqli      $db      Объект с базой данных
+ * @param   integer     $itemId  id лота
+ * @return  array|null           Ассоциативный массив с данными лота
  */
-
 function getItem(mysqli $db, int $itemId): ?array
 {
     $sql = "
@@ -36,10 +35,9 @@ function getItem(mysqli $db, int $itemId): ?array
 }
 
 /**
- * Возвращает дейстующие лоты, отсортированные от новых к старым
- *
- * @param mysqli $db Объект с базой данных
- * @return array|null Ассоциативный массив с данными лотов
+ * Получает действующие лоты, отсортированные от новых к старым
+ * @param   mysqli      $db  Объект с базой данных
+ * @return  array|null       Ассоциативный массив с данными лотов
  */
 function getNewItems(mysqli $db): ?array
 {
@@ -69,10 +67,11 @@ function getNewItems(mysqli $db): ?array
 
 /**
  * Добавляет в базу данных запись с новым лотом
- * @param mysqli $db Объект с базой данных
- * @param string $imagePath Путь к картинке
+ * @param   mysqli   $db        Объект с базой данных
+ * @param   array    $formData  Данные лота
+ * @return  integer             id нового лота
  */
-function insertItem(mysqli $db, array $formData)
+function insertItem(mysqli $db, array $formData): int
 {
     $sql = "
         INSERT INTO items (
