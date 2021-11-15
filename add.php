@@ -54,6 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $formData['image']['webPath'] = moveFile($formData['image']);
         $itemId = insertItem($db, $formData);
         header("Location: /lot.php?item_id=" . $itemId);
+        exit;
     }
 }
 
