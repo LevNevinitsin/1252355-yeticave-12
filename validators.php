@@ -163,6 +163,37 @@ function validateDecimalLengths($value, int $wholeMax, int $decimalMax = 0): ?st
 }
 
 /**
+ * Валидирует значение на корректный email адрес
+ * @param   mixed        $value    Значение
+ * @param   string       $message  Текст сообщения об ошибке
+ * @return  string|null            Сообщение об ошибке или null, если ошибки нет
+ */
+function validateEmail($value, string $message = 'Введите корректный e-mail'): ?string
+{
+    if (filter_var($value, FILTER_VALIDATE_EMAIL) === false) {
+        return $message;
+    }
+
+    return null;
+}
+
+/**
+ * Валидирует email на отсутствие в таблице пользователей в базе данных
+ * @param   string       $email Адрес email
+ * @param   mysqli       $db Объект с базой данных
+ * @param   string       $message Текст сообщения об ошибке
+ * @return  string|null  Сообщение об ошибке или null, если ошибки нет
+ */
+function validateUniqueEmail(string $email, mysqli $db, string $message = 'Такой email уже существует'): ?string
+{
+    if (getUserByEmail($db, $email)) {
+        return $message;
+    }
+
+    return null;
+}
+
+/**
  * Валидирует значение на соответствие формату даты
  * @param   string       $date     Значение
  * @param   string       $message  Текст сообщения об ошибке
