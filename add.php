@@ -51,13 +51,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ],
     ];
 
-    $formData = array_merge($_POST, $_FILES);
-    $errors = getFormErrors($formData, $fieldsRules);
+    $itemData = array_merge($_POST, $_FILES);
+    $errors = getFormErrors($itemData, $fieldsRules);
 
     if (!count($errors)) {
-        $formData['lot-rate'] = formatDecimalValues($formData['lot-rate']);
-        $formData['image']['webPath'] = moveFile($formData['image']);
-        $itemId = insertItem($db, $formData);
+        $itemData['lot-rate'] = formatDecimalValues($itemData['lot-rate']);
+        $itemData['image']['webPath'] = moveFile($itemData['image']);
+        $itemData['user_id'] = $user['user_id'];
+        $itemId = insertItem($db, $itemData);
         header("Location: /lot.php?item_id=" . $itemId);
         exit;
     }
@@ -65,6 +66,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 echo getHtml('add-lot.php', [
     'categories' => $categories,
-    'formData' => $formData ?? [],
+    'itemData' => $itemData ?? [],
     'errors' => $errors ?? [],
 ], $categories, $user, 'Добавление лота');
