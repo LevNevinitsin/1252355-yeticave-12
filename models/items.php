@@ -68,10 +68,10 @@ function getNewItems(mysqli $db): ?array
 /**
  * Добавляет в базу данных запись с новым лотом
  * @param   mysqli   $db        Объект с базой данных
- * @param   array    $formData  Данные лота
+ * @param   array    $itemData  Данные лота
  * @return  integer             id нового лота
  */
-function insertItem(mysqli $db, array $formData): int
+function insertItem(mysqli $db, array $itemData): int
 {
     $sql = "
         INSERT INTO items (
@@ -84,19 +84,20 @@ function insertItem(mysqli $db, array $formData): int
             category_id,
             item_date_expire
         )
-        VALUES (?, ?, ?, ?, ?, 1, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     ";
 
     $stmt = $db->prepare($sql);
     $stmt->bind_param(
-        "sssssss",
-        $formData['lot-name'],
-        $formData['description'],
-        $formData['image']['webPath'],
-        $formData['lot-rate'],
-        $formData['lot-step'],
-        $formData['category_id'],
-        $formData['lot-date']
+        "ssssssss",
+        $itemData['lot-name'],
+        $itemData['description'],
+        $itemData['image']['webPath'],
+        $itemData['lot-rate'],
+        $itemData['lot-step'],
+        $itemData['user_id'],
+        $itemData['category_id'],
+        $itemData['lot-date']
     );
     $stmt->execute();
 

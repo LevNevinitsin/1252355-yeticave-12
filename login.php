@@ -2,7 +2,8 @@
 require __DIR__ . '/initialize.php';
 
 if ($user) {
-    httpError($categories, $user, 403, '', 'Вы уже вошли на сайт.');
+    header("Location: /");
+    exit;
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -13,18 +14,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'email' => [
             ['validateRequired', ['Введите e-mail']],
             ['validateEmail'],
-            ['validateUniqueEmail', [$db]],
         ],
         'password' => [
             ['validateRequired', ['Введите пароль']],
-            ['validateScalar'],
-        ],
-        'name' => [
-            ['validateRequired', ['Введите имя']],
-            ['validateScalar'],
-        ],
-        'message' => [
-            ['validateRequired', ['Напишите как с вами связаться']],
             ['validateScalar'],
         ],
     ];
@@ -33,15 +25,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $errors = getFormErrors($formData, $fieldsRules);
 
     if(!count($errors)) {
-        $formData['password'] = password_hash($formData['password'], PASSWORD_DEFAULT);
-        insertUser($db, $formData);
-        header("Location: /login.php");
-        exit;
+        $user = getUserByEmail($db, $formData['email']);
+
+        if ($user && password_verify($formData['password'], $user['user_password'])) {
+            $_SESSION['user'] = $user;
+            header("Location: /");
+            exit;
+        }
+
+        $errors['auth'] = 'Неверный email или пароль';
     }
 }
 
-echo getHtml('sign-up.php', [
+echo getHtml('login.php', [
     'categories' => $categories,
     'formData' => $formData ?? [],
     'errors' => $errors ?? [],
-], $categories, $user, 'Регистрация');
+], $categories, $user, 'Вход');

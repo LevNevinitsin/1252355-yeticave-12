@@ -850,13 +850,15 @@ input:invalid .form__error{
   display: block;
 }
 
-.form__error--bottom {
+.form__error--bottom,
+.form__error--top {
   display: none;
   margin-bottom: 15px;
   font-size: 16px;
 }
 
-.form--invalid .form__error--bottom {
+.form--invalid .form__error--bottom,
+.form--invalid .form__error--top {
   display: block;
 }
 

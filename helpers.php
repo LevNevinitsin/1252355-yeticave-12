@@ -176,36 +176,58 @@ function getRemainingTime(string $expireDate): array
  * @param   string    $pageTemplate   Путь к файлу шаблона относительно папки templates
  * @param   array     $pageData       Ассоциативный массив с данными для шаблона
  * @param   array     $categories     Ассоциативный массив с категориями товаров
- * @param   integer   $isAuth         Число 1 либо 0, отображающее статус авторизации пользователя
- * @param   string    $userName       Имя пользователя
+ * @param   array     $user           Данные пользователя
  * @param   string    $title          Содержимое для тега <title>
  * @param   boolean   $isIndexPage    Является ли страница главной
  * @return  string                    Полный HTML страницы
  */
-function getHTML(string $pageTemplate, array $pageData, array $categories, int $isAuth, string $userName, string $title, bool $isIndexPage = false): string
+function getHTML(string $pageTemplate, array $pageData, array $categories, ?array $user, string $title, bool $isIndexPage = false): string
 {
     $pageContent = includeTemplate($pageTemplate, $pageData);
     $layoutData = [
         'content' => $pageContent,
         'categories' => $categories,
         'title' => $title,
-        'isAuth' => $isAuth,
-        'userName' => $userName,
+        'user' => $user,
         'isIndexPage' => $isIndexPage,
     ];
     return includeTemplate('layout.php', $layoutData);
 }
 
 /**
- * Передает код ошибки 404, выводит HTML для страницы 404 и завершает скрипт.
- * @param  array     $categories  Ассоциативный массив с категориями товаров
- * @param  integer   $isAuth      Число 1 либо 0, отображающее статус авторизации пользователя
- * @param  string    $userName    Имя пользователя
+ * Передает код ошибки и выводит HTML с тайтлом и текстом для соответствующей ошибки
+ * @param  array        $categories    Категории лотов
+ * @param  array|null   $user          Данные пользователя
+ * @param  integer      $responseCode  Код ответа, который нужно передать
+ * @param  string|null  $title         Тайтл страницы
+ * @param  string|null  $errorText     Поясняющий текст
+ * @param  string       $template      Кастомный шаблон, либо error.php по умолчанию
  */
-function render404(array $categories, int $isAuth, string $userName)
+function httpError(array $categories, ?array $user, int $responseCode, ?string $title = '', ?string $errorText = '', string $template = 'error.php')
 {
-    http_response_code(404);
-    echo getHtml('404.php', ['categories' => $categories], $categories, $isAuth, $userName, 'Страница не найдена');
+    $errorsMap = [
+        403 => [
+            'title' => 'Доступ запрещён',
+            'errorText' => 'Сначала войдите на сайт.',
+        ],
+        404 => [
+            'title' => 'Страница не найдена',
+            'errorText' => 'Данной страницы не существует на сайте.',
+        ],
+    ];
+
+    $errorInfo = $errorsMap[$responseCode];
+    $errorText = $errorText ?: $errorInfo['errorText'] ?? null;
+    $title = $title ?: $errorInfo['title'] ?? null;
+    $template = $errorInfo['template'] ?? $template;
+
+    http_response_code($responseCode);
+    echo getHtml($template, [
+        'categories' => $categories,
+        'responseCode' => $responseCode,
+        'errorText' => $errorText,
+        'title' => $title,
+    ], $categories, $user, $title);
     exit;
 }
 

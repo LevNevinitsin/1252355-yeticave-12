@@ -18,6 +18,7 @@
             <p class="lot-item__description"><?= esc($item['item_description']) ?></p>
         </div>
         <div class="lot-item__right">
+            <?php if ($user): ?>
             <div class="lot-item__state">
                 <?php list ($hours, $minutes) = getRemainingTime($item['item_date_expire']); ?>
                 <div class="lot-item__timer timer <?= ($hours === '00') ? 'timer--finishing' : '' ?>">
@@ -41,6 +42,7 @@
                     <button type="submit" class="button">Сделать ставку</button>
                 </form>
             </div>
+            <?php endif ?>
             <div class="history" style="display: none;">
                 <h3>История ставок (<span>10</span>)</h3>
                 <table class="history__list">
