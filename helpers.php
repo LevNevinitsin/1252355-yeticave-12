@@ -195,14 +195,39 @@ function getHTML(string $pageTemplate, array $pageData, array $categories, ?arra
 }
 
 /**
- * Передает код ошибки 404, выводит HTML для страницы 404 и завершает скрипт.
- * @param  array  $categories  Ассоциативный массив с категориями товаров
- * @param  array  $user        Данные пользователя
+ * Передает код ошибки и выводит HTML с тайтлом и текстом для соответствующей ошибки
+ * @param  array        $categories    Категории лотов
+ * @param  array|null   $user          Данные пользователя
+ * @param  integer      $responseCode  Код ответа, который нужно передать
+ * @param  string|null  $title         Тайтл страницы
+ * @param  string|null  $errorText     Поясняющий текст
+ * @param  string       $template      Кастомный шаблон, либо error.php по умолчанию
  */
-function render404(array $categories, ?array $user)
+function httpError(array $categories, ?array $user, int $responseCode, ?string $title = '', ?string $errorText = '', string $template = 'error.php')
 {
-    http_response_code(404);
-    echo getHtml('404.php', ['categories' => $categories], $categories, $user, 'Страница не найдена');
+    $errorsMap = [
+        403 => [
+            'title' => 'Доступ запрещён',
+            'errorText' => 'Сначала войдите на сайт.',
+        ],
+        404 => [
+            'title' => 'Страница не найдена',
+            'errorText' => 'Данной страницы не существует на сайте.',
+        ],
+    ];
+
+    $errorInfo = $errorsMap[$responseCode];
+    $errorText = $errorText ?: $errorInfo['errorText'] ?? null;
+    $title = $title ?: $errorInfo['title'] ?? null;
+    $template = $errorInfo['template'] ?? $template;
+
+    http_response_code($responseCode);
+    echo getHtml($template, [
+        'categories' => $categories,
+        'responseCode' => $responseCode,
+        'errorText' => $errorText,
+        'title' => $title,
+    ], $categories, $user, $title);
     exit;
 }
 

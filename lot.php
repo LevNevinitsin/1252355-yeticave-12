@@ -5,13 +5,13 @@ require __DIR__ . '/models/items.php';
 $itemId = $_GET['item_id'] ?? null;
 
 if (!$itemId) {
-    render404($categories, $isAuth, $userName);
+    httpError($categories, $user, 404);
 }
 
 $item = getItem($db, $itemId);
 
 if (!$item) {
-    render404($categories, $isAuth, $userName);
+    httpError($categories, $user, 404);
 }
 
 echo getHtml('lot.php', [

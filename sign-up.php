@@ -2,8 +2,7 @@
 require __DIR__ . '/initialize.php';
 
 if ($user) {
-    http_response_code(403);
-    exit;
+    httpError($categories, $user, 403, '', 'Вы уже вошли на сайт.');
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
