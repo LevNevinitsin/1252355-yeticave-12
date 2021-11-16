@@ -35,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if(!count($errors)) {
         $formData['password'] = password_hash($formData['password'], PASSWORD_DEFAULT);
         insertUser($db, $formData);
-        header("Location: /"); // TODO: поменять адрес, когда появится страница для логина
+        header("Location: /login.php");
         exit;
     }
 }
