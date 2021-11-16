@@ -176,21 +176,19 @@ function getRemainingTime(string $expireDate): array
  * @param   string    $pageTemplate   Путь к файлу шаблона относительно папки templates
  * @param   array     $pageData       Ассоциативный массив с данными для шаблона
  * @param   array     $categories     Ассоциативный массив с категориями товаров
- * @param   integer   $isAuth         Число 1 либо 0, отображающее статус авторизации пользователя
- * @param   string    $userName       Имя пользователя
+ * @param   array     $user           Данные пользователя
  * @param   string    $title          Содержимое для тега <title>
  * @param   boolean   $isIndexPage    Является ли страница главной
  * @return  string                    Полный HTML страницы
  */
-function getHTML(string $pageTemplate, array $pageData, array $categories, int $isAuth, string $userName, string $title, bool $isIndexPage = false): string
+function getHTML(string $pageTemplate, array $pageData, array $categories, ?array $user, string $title, bool $isIndexPage = false): string
 {
     $pageContent = includeTemplate($pageTemplate, $pageData);
     $layoutData = [
         'content' => $pageContent,
         'categories' => $categories,
         'title' => $title,
-        'isAuth' => $isAuth,
-        'userName' => $userName,
+        'user' => $user,
         'isIndexPage' => $isIndexPage,
     ];
     return includeTemplate('layout.php', $layoutData);
@@ -198,14 +196,13 @@ function getHTML(string $pageTemplate, array $pageData, array $categories, int $
 
 /**
  * Передает код ошибки 404, выводит HTML для страницы 404 и завершает скрипт.
- * @param  array     $categories  Ассоциативный массив с категориями товаров
- * @param  integer   $isAuth      Число 1 либо 0, отображающее статус авторизации пользователя
- * @param  string    $userName    Имя пользователя
+ * @param  array  $categories  Ассоциативный массив с категориями товаров
+ * @param  array  $user        Данные пользователя
  */
-function render404(array $categories, int $isAuth, string $userName)
+function render404(array $categories, ?array $user)
 {
     http_response_code(404);
-    echo getHtml('404.php', ['categories' => $categories], $categories, $isAuth, $userName, 'Страница не найдена');
+    echo getHtml('404.php', ['categories' => $categories], $categories, $user, 'Страница не найдена');
     exit;
 }
 

@@ -40,4 +40,4 @@ echo getHtml('sign-up.php', [
     'categories' => $categories,
     'formData' => $formData ?? [],
     'errors' => $errors ?? [],
-], $categories, $isAuth, $userName, 'Регистрация');
+], $categories, $user, 'Регистрация');

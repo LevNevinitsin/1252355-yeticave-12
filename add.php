@@ -62,4 +62,4 @@ echo getHtml('add-lot.php', [
     'categories' => $categories,
     'formData' => $formData ?? [],
     'errors' => $errors ?? [],
-], $categories, $isAuth, $userName, 'Добавление лота');
+], $categories, $user, 'Добавление лота');

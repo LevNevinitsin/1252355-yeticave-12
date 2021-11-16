@@ -14,4 +14,8 @@ if (!$item) {
     render404($categories, $isAuth, $userName);
 }
 
-echo getHtml('lot.php', ['categories' => $categories, 'item' => $item], $categories, $isAuth, $userName, $item['item_name']);
+echo getHtml('lot.php', [
+    'categories' => $categories,
+    'user' => $user,
+    'item' => $item,
+], $categories, $user, $item['item_name']);
