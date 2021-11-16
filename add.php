@@ -1,6 +1,11 @@
 <?php
 require __DIR__ . '/initialize.php';
 
+if (!$user) {
+    http_response_code(403);
+    exit;
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     require __DIR__ . '/validators.php';
     require __DIR__ . '/models/items.php';
