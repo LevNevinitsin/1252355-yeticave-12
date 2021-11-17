@@ -58,7 +58,7 @@ CREATE TABLE users (
     user_id              INT (11) UNSIGNED NOT NULL AUTO_INCREMENT,
     user_email           VARCHAR(50)       NOT NULL UNIQUE,
     user_name            VARCHAR(100)      NOT NULL,
-    user_password        VARCHAR(128)      NOT NULL,
+    user_password        VARCHAR(255)      NOT NULL,
     user_contact_info    TEXT,
     user_date_registered DATETIME          NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
