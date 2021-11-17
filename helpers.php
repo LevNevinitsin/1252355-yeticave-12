@@ -246,16 +246,6 @@ function httpError(array $categories, ?array $user, int $responseCode, ?string $
 }
 
 /**
- * Получает экранированное значение поля
- * @param   string        $fieldname  Имя поля
- * @return  string|null               Экранированное значение поля (если было)
- */
-function getPostVal(array $formData, string $fieldname): ?string
-{
-    return esc($formData[$fieldname] ?? '');
-}
-
-/**
  * Получает имя класса-модификатора для поля, если есть ошибка валидации
  * @param   array    $errors     Массив с ошибками
  * @param   string   $fieldname  Имя поля
