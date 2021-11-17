@@ -732,6 +732,11 @@ main.container {
   margin-right: 0;
 }
 
+.pagination-item-disabled a:hover,
+.pagination-item-disabled a:active {
+  color: #879296;
+}
+
 .pagination-item-active a {
   color: #25434e;
   background-color: rgba(135, 146, 150, 0.1);
