@@ -21,4 +21,7 @@ mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 $db = new mysqli($dbConfig['host'], $dbConfig['username'], $dbConfig['password'], $dbConfig['dbname'], $dbConfig['port']);
 $db->set_charset($dbConfig['dbCharset']);
 
+require __DIR__ . '/prolong.php';
+prolongExpiredDates($db);
+
 $categories = getCategories($db);

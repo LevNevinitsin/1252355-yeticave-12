@@ -161,27 +161,51 @@ function esc(?string $text): string
 /**
  * Принимает дату истечения лота и возвращает оставшееся до неё время
  * @param   string   $expireDate  Дата истечения лота
- * @return  array                 Оставшееся до истечения лота время в виде массива [ЧЧ, ММ]
+ * @return  array                 Оставшееся до истечения лота время в виде массива [ЧЧ, ММ, СС]
  */
 function getRemainingTime(string $expireDate): array
 {
     $diff = strtotime($expireDate) - time();
-    $hours = str_pad(floor($diff / 3600), 2, '0', STR_PAD_LEFT);
-    $minutes = str_pad(floor(($diff % 3600) / 60), 2, '0', STR_PAD_LEFT);
-    return [$hours, $minutes];
+    $hoursCount = str_pad(floor($diff / 3600), 2, '0', STR_PAD_LEFT);
+    $minutesCount = str_pad(floor(($diff % 3600) / 60), 2, '0', STR_PAD_LEFT);
+    $secondsCount = str_pad(floor(($diff % 3600) % 60), 2, '0', STR_PAD_LEFT);
+    return [$hoursCount, $minutesCount, $secondsCount];
+}
+
+/**
+ * Получает текст с количеством ставок либо строку по умолчанию
+ * @param  integer  $bidsCount      Количество ставок
+ * @param  string   $zeroCountText  Строка, которую вернёт функуия, если ставок не было
+ * @return string                   Текст с количеством ставок либо строка по умолчанию, если ставок не было
+ */
+function getBidsCountText(int $bidsCount, string $zeroCountText = 'Стартовая цена'): string
+{
+    return $bidsCount ? $bidsCount . " " . getNounPluralForm($bidsCount, 'ставка', 'ставки', 'ставок') : $zeroCountText;
+}
+
+/**
+ * Получает атрибут href со ссылкой на страницу поиска
+ * @param   string   $searchString  Значение поисковой строки
+ * @param   integer  $page          Номер нужной страницы
+ * @return  string                  Итоговый атрибут href
+ */
+function getSearchLink(string $searchString, int $page): string
+{
+    return "href='/search.php?search=$searchString&page=$page'";
 }
 
 /**
  * Принимает шаблон страницы, данные для него и для лейаута и возвращает полный HTML страницы
- * @param   string    $pageTemplate   Путь к файлу шаблона относительно папки templates
- * @param   array     $pageData       Ассоциативный массив с данными для шаблона
- * @param   array     $categories     Ассоциативный массив с категориями товаров
- * @param   array     $user           Данные пользователя
- * @param   string    $title          Содержимое для тега <title>
- * @param   boolean   $isIndexPage    Является ли страница главной
- * @return  string                    Полный HTML страницы
+ * @param   string       $pageTemplate   Путь к файлу шаблона относительно папки templates
+ * @param   array        $pageData       Ассоциативный массив с данными для шаблона
+ * @param   array        $categories     Ассоциативный массив с категориями товаров
+ * @param   array        $user           Данные пользователя
+ * @param   string       $title          Содержимое для тега <title>
+ * @param   string|null  $searchString   Значение из строки поиска
+ * @param   boolean      $isIndexPage    Является ли страница главной
+ * @return  string                       Полный HTML страницы
  */
-function getHTML(string $pageTemplate, array $pageData, array $categories, ?array $user, string $title, bool $isIndexPage = false): string
+function getHTML(string $pageTemplate, array $pageData, array $categories, ?array $user, string $title, ?string $searchString = null, bool $isIndexPage = false): string
 {
     $pageContent = includeTemplate($pageTemplate, $pageData);
     $layoutData = [
@@ -189,6 +213,7 @@ function getHTML(string $pageTemplate, array $pageData, array $categories, ?arra
         'categories' => $categories,
         'title' => $title,
         'user' => $user,
+        'searchString' => $searchString,
         'isIndexPage' => $isIndexPage,
     ];
     return includeTemplate('layout.php', $layoutData);
@@ -229,16 +254,6 @@ function httpError(array $categories, ?array $user, int $responseCode, ?string $
         'title' => $title,
     ], $categories, $user, $title);
     exit;
-}
-
-/**
- * Получает экранированное значение поля
- * @param   string        $fieldname  Имя поля
- * @return  string|null               Экранированное значение поля (если было)
- */
-function getPostVal(array $formData, string $fieldname): ?string
-{
-    return esc($formData[$fieldname] ?? '');
 }
 
 /**

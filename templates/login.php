@@ -16,12 +16,12 @@
     <?php endif ?>
     <div class="form__item <?= getErrorClassname($errors, 'email') ?>">
         <label for="email">E-mail <sup>*</sup></label>
-        <input id="email" type="text" name="email" placeholder="Введите e-mail" value="<?= getPostVal($formData, 'email')?>">
+        <input id="email" type="text" name="email" placeholder="Введите e-mail" value="<?= esc($formData['email'] ?? '')?>">
         <span class="form__error"><?= getErrorMessage($errors, 'email') ?></span>
     </div>
     <div class="form__item form__item--last <?= getErrorClassname($errors, 'password') ?>">
         <label for="password">Пароль <sup>*</sup></label>
-        <input id="password" type="password" name="password" placeholder="Введите пароль" value="<?= getPostVal($formData, 'password')?>">
+        <input id="password" type="password" name="password" placeholder="Введите пароль" value="<?= esc($formData['password'] ?? '')?>">
         <span class="form__error"><?= getErrorMessage($errors, 'password') ?></span>
     </div>
     <button type="submit" class="button">Войти</button>
