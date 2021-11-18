@@ -44,21 +44,22 @@ function getNewItems(mysqli $db): ?array
     $sql = "
         SELECT i.item_id,
                i.item_name,
-               i.item_initial_price,
                i.item_image,
                i.item_date_expire,
-
-               COALESCE(
-                  (SELECT MAX(b.bid_price)
-                     FROM bids AS b
-                    WHERE i.item_id = b.item_id),
-                  i.item_initial_price
-               ) AS current_price,
-
+               COALESCE(b.top_bid, i.item_initial_price) AS current_price,
+               COALESCE(b.bids_count, 0) AS bids_count,
                c.category_name
           FROM items AS i
                INNER JOIN categories AS c
                ON i.category_id = c.category_id
+               LEFT JOIN (
+                   SELECT item_id,
+                          MAX(bid_price) AS top_bid,
+                          COUNT(bid_id) AS bids_count
+                     FROM bids
+                    GROUP BY item_id
+               ) AS b
+               ON i.item_id = b.item_id
          WHERE item_date_expire > NOW()
          ORDER BY item_date_added DESC
     ";
@@ -117,20 +118,29 @@ function searchItems(mysqli $db, string $searchString, int $pageItemsLimit, int 
     $sql = "
         SELECT i.item_id,
                i.item_name,
-               i.item_initial_price,
                i.item_image,
                i.item_date_expire,
+               COALESCE(b.top_bid, i.item_initial_price) AS current_price,
+               COALESCE(b.bids_count, 0) AS bids_count,
                c.category_name
           FROM items AS i
                INNER JOIN categories AS c
                ON i.category_id = c.category_id
-         WHERE i.item_date_expire > NOW()
+               LEFT JOIN (
+                   SELECT item_id,
+                          MAX(bid_price) AS top_bid,
+                          COUNT(bid_id) AS bids_count
+                     FROM bids
+                    GROUP BY item_id
+               ) AS b
+               ON i.item_id = b.item_id
+         WHERE item_date_expire > NOW()
            AND MATCH(i.item_name, i.item_description) AGAINST(?)
-         LIMIT $pageItemsLimit OFFSET $offset
+         LIMIT ? OFFSET ?
     ";
 
     $stmt = $db->prepare($sql);
-    $stmt->bind_param("s", $searchString);
+    $stmt->bind_param("sss", $searchString, $pageItemsLimit, $offset);
     $stmt->execute();
     return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 }

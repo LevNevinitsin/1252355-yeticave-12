@@ -173,6 +173,17 @@ function getRemainingTime(string $expireDate): array
 }
 
 /**
+ * Получает текст с количеством ставок либо строку по умолчанию
+ * @param  integer  $bidsCount      Количество ставок
+ * @param  string   $zeroCountText  Строка, которую вернёт функуия, если ставок не было
+ * @return string                   Текст с количеством ставок либо строка по умолчанию, если ставок не было
+ */
+function getBidsCountText(int $bidsCount, string $zeroCountText = 'Стартовая цена'): string
+{
+    return $bidsCount ? $bidsCount . " " . getNounPluralForm($bidsCount, 'ставка', 'ставки', 'ставок') : $zeroCountText;
+}
+
+/**
  * Получает атрибут href со ссылкой на страницу поиска
  * @param   string   $searchString  Значение поисковой строки
  * @param   integer  $page          Номер нужной страницы
