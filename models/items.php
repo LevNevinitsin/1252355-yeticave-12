@@ -103,3 +103,55 @@ function insertItem(mysqli $db, array $itemData): int
 
     return $db->insert_id;
 }
+
+/**
+ * Находит лоты с учётом максимального числа элементов на странице и смещения выборки
+ * @param   mysqli      $db              Объект с базой данных
+ * @param   string      $searchString    Значение поисковой строки
+ * @param   integer     $pageItemsLimit  Максимальное количество элементов на странице
+ * @param   integer     $offset          Смещение выборки
+ * @return  array|null                   Найденные лоты
+ */
+function searchItems(mysqli $db, string $searchString, int $pageItemsLimit, int $offset): array
+{
+    $sql = "
+        SELECT i.item_id,
+               i.item_name,
+               i.item_initial_price,
+               i.item_image,
+               i.item_date_expire,
+               c.category_name
+          FROM items AS i
+               INNER JOIN categories AS c
+               ON i.category_id = c.category_id
+         WHERE i.item_date_expire > NOW()
+           AND MATCH(i.item_name, i.item_description) AGAINST(?)
+         LIMIT $pageItemsLimit OFFSET $offset
+    ";
+
+    $stmt = $db->prepare($sql);
+    $stmt->bind_param("s", $searchString);
+    $stmt->execute();
+    return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+}
+
+/**
+ * Считает общее количество лотов, подходящих по условиям поиска
+ * @param   mysqli   $db            Объект с базой данных
+ * @param   string   $searchString  Значение поисковой строки
+ * @return  integer                 Количество лотов, подходящих по условиям поиска
+ */
+function countFoundItems(mysqli $db, string $searchString): int
+{
+    $sql = "
+        SELECT COUNT(*) as foundItemsCount
+          FROM items
+         WHERE item_date_expire > NOW()
+           AND MATCH(item_name, item_description) AGAINST(?)
+    ";
+
+    $stmt = $db->prepare($sql);
+    $stmt->bind_param("s", $searchString);
+    $stmt->execute();
+    return $stmt->get_result()->fetch_assoc()['foundItemsCount'];
+}
