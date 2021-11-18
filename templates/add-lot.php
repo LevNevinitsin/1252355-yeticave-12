@@ -20,7 +20,7 @@
             <select id="category" name="category_id">
                 <option value="">Выберите категорию</option>
                 <?php foreach ($categories as $category): ?>
-                <option value="<?= esc($category['category_id']) ?>" <?= $category['category_id'] === esc($itemData['category_id'] ?? '') ? 'selected' : '' ?>><?= esc($category['category_name']) ?></option>
+                <option value="<?= esc($category['category_id']) ?>" <?= $category['category_id'] === ($itemData['category_id'] ?? '') ? 'selected' : '' ?>><?= esc($category['category_name']) ?></option>
                 <?php endforeach ?>
             </select>
             <span class="form__error"><?= getErrorMessage($errors, 'category_id') ?></span>
