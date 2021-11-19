@@ -273,17 +273,6 @@ function getErrorClassname(array $errors, string $fieldname): string
 }
 
 /**
- * Получает сообщение об ошибке валидации поля
- * @param   array|null   $errors     Массив с ошибками
- * @param   string       $fieldname  Имя поля
- * @return  string                   Сообщение об ошибке или пустая строка, если ошибки нет
- */
-function getErrorMessage(?array $errors, string $fieldname): string
-{
-    return esc($errors[$fieldname] ?? '');
-}
-
-/**
  * Заменяет запятую на точку в значении
  *
  * @param   string   $value  Исходное значение
