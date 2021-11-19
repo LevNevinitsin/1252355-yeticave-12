@@ -46,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ['validateRequired', ['Введите дату завершения торгов']],
             ['validateScalar'],
             ['validateDateFormat'],
-            ['validateDateInterval', ['tomorrow']]
+            ['validateDateInterval', ['tomorrow']],
         ],
     ];
 
