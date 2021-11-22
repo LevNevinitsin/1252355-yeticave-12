@@ -12,6 +12,7 @@ function getItem(mysqli $db, int $itemId): ?array
                i.item_description,
                i.item_initial_price,
                i.item_bid_step,
+               i.seller_id,
                i.item_image,
                i.item_date_expire,
 
