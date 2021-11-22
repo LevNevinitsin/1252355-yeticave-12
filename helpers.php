@@ -159,13 +159,18 @@ function esc(?string $text): string
 }
 
 /**
- * Принимает дату истечения лота и возвращает оставшееся до неё время
- * @param   string   $expireDate  Дата истечения лота
- * @return  array                 Оставшееся до истечения лота время в виде массива [ЧЧ, ММ, СС]
+ * Получает оставшееся до указанной даты время
+ * @param   string  $expireDate  Указанная дата
+ * @return  array                Оставшееся время в виде массива [ЧЧ, ММ, СС], либо null, если время истекло
  */
-function getRemainingTime(string $expireDate): array
+function getRemainingTime(string $date): ?array
 {
-    $diff = strtotime($expireDate) - time();
+    $diff = strtotime($date) - time();
+
+    if ($diff <= 0) {
+        return null;
+    }
+
     $hoursCount = str_pad(floor($diff / 3600), 2, '0', STR_PAD_LEFT);
     $minutesCount = str_pad(floor(($diff % 3600) / 60), 2, '0', STR_PAD_LEFT);
     $secondsCount = str_pad(floor(($diff % 3600) % 60), 2, '0', STR_PAD_LEFT);
