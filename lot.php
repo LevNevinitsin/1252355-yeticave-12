@@ -15,6 +15,12 @@ if (!$item) {
     httpError($categories, $user, 404);
 }
 
+list (
+    $item['remainingHours'],
+    $item['remainingMinutes'],
+    $item['remainingSeconds']
+) = getRemainingTime($item['item_date_expire']);
+
 $bidMinimumValue = $item['current_price'] + $item['item_bid_step'];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {

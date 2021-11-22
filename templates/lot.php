@@ -18,12 +18,10 @@
             <p class="lot-item__description"><?= esc($item['item_description']) ?></p>
         </div>
         <div class="lot-item__right">
-            <?php $remainingTime = getRemainingTime($item['item_date_expire']) ?>
-            <?php if ($user && $user['user_id'] !== $item['seller_id'] && $user['user_id'] !== $lastBidUserId && $remainingTime): ?>
+            <?php if ($user && $user['user_id'] !== $item['seller_id'] && $user['user_id'] !== $lastBidUserId && $item['remainingHours'] !== null): ?>
             <div class="lot-item__state">
-                <?php list ($hours, $minutes) = $remainingTime ?>
-                <div class="lot-item__timer timer <?= ($hours === '00') ? 'timer--finishing' : '' ?>">
-                    <?= esc($hours . ":" . $minutes) ?>
+                <div class="lot-item__timer timer <?= ($item['remainingHours'] === '00') ? 'timer--finishing' : '' ?>">
+                    <?= esc("{$item['remainingHours']}:{$item['remainingMinutes']}") ?>
                 </div>
                 <div class="lot-item__cost-state">
                     <div class="lot-item__rate">

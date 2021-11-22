@@ -12,9 +12,8 @@
                     <span class="lot__amount"><?= getBidsCountText($item['bids_count']) ?></span>
                     <span class="lot__cost"><?= esc(formatPrice($item['current_price'])) ?></span>
                 </div>
-                <?php list ($hoursCount, $minutesCount, $secondsCount) = getRemainingTime($item['item_date_expire']); ?>
-                <div class="lot__timer timer <?= ($hours === '00') ? 'timer--finishing' : '' ?>">
-                    <?= esc("$hoursCount:$minutesCount:$secondsCount") ?>
+                <div class="lot__timer timer <?= ($item['remainingHours'] === '00') ? 'timer--finishing' : '' ?>">
+                    <?= esc("{$item['remainingHours']}:{$item['remainingMinutes']}:{$item['remainingSeconds']}") ?>
                 </div>
             </div>
         </div>

@@ -11,9 +11,9 @@
     <h2>Мои ставки</h2>
     <table class="rates__list">
         <?php foreach ($bids as $bid): ?>
-        <?php $remainingTime = getRemainingTime($bid['item_date_expire']) ?>
+        <?php $isExpired = $bid['remainingHours'] === null ?>
         <?php $isWinner = $bid['winner_id'] === $user['user_id'] ?>
-        <?php if ($remainingTime): ?>
+        <?php if (!$isExpired): ?>
         <tr class="rates__item">
         <?php else: ?>
         <tr class="rates__item <?= $isWinner ? 'rates__item--win' : 'rates__item--end' ?>">
@@ -24,7 +24,7 @@
                 </div>
                 <div>
                     <h3 class="rates__title"><a href="<?= esc("/lot.php?item_id=${bid['item_id']}") ?>"><?= esc($bid['item_name']) ?></a></h3>
-                    <?php if (!$remainingTime && $isWinner): ?>
+                    <?php if ($isExpired && $isWinner): ?>
                     <p><?= esc($bid['seller_contact_info']) ?></p>
                     <?php endif ?>
                 </div>
@@ -33,10 +33,9 @@
                 <?= esc($bid['category_name']) ?>
             </td>
             <td class="rates__timer">
-                <?php if ($remainingTime): ?>
-                <?php list ($hoursCount, $minutesCount, $secondsCount) = $remainingTime ?>
-                <div class="timer <?= ($hoursCount === '00') ? 'timer--finishing' : '' ?>">
-                    <?= esc("$hoursCount:$minutesCount:$secondsCount") ?>
+                <?php if (!$isExpired): ?>
+                <div class="timer <?= ($bid['remainingHours'] === '00') ? 'timer--finishing' : '' ?>">
+                    <?= esc("{$bid['remainingHours']}:{$bid['remainingMinutes']}:{$bid['remainingSeconds']}") ?>
                 </div>
                 <?php elseif ($isWinner): ?>
                 <div class="timer timer--win">Ставка выиграла</div>
