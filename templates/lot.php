@@ -18,7 +18,7 @@
             <p class="lot-item__description"><?= esc($item['item_description']) ?></p>
         </div>
         <div class="lot-item__right">
-            <?php if ($user && $user['user_id'] !== $item['seller_id'] && $user['user_id'] !== $lastBidUserId && $item['remainingHours'] !== null): ?>
+            <?php if ($isAllowedToBet): ?>
             <div class="lot-item__state">
                 <div class="lot-item__timer timer <?= ($item['remainingHours'] === '00') ? 'timer--finishing' : '' ?>">
                     <?= esc("{$item['remainingHours']}:{$item['remainingMinutes']}") ?>

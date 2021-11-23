@@ -54,14 +54,18 @@ foreach ($bids as &$bid) {
     $bid['relativeTime'] = getRelativeTime($bid['bid_date_created'], 'yesterday', 'tomorrow');
 }
 
-$lastBidUserId = $bids[0]['user_id'] ?? null;
+$isAuth = $user;
+$isUserSeller = $user['user_id'] === $item['seller_id'];
+$isUserLastBettor = $user['user_id'] === ($bids[0]['user_id'] ?? null);
+$isExpired = $item['remainingHours'] === null;
+$isAllowedToBet = $isAuth && !$isUserSeller && !$isUserLastBettor && !$isExpired;
 
 echo getHtml('lot.php', [
     'categories' => $categories,
     'user' => $user,
     'itemId' => $itemId,
     'item' => $item,
-    'lastBidUserId' => $lastBidUserId,
+    'isAllowedToBet' => $isAllowedToBet,
     'bids' => $bids,
     'bidMinimumValue' => $bidMinimumValue,
     'bidData' => $bidData ?? [],
