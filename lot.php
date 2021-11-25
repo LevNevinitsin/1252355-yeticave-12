@@ -23,8 +23,19 @@ list (
 
 $bidMinimumValue = $item['current_price'] + $item['item_bid_step'];
 
+$bids = getItemBids($db, $itemId);
+foreach ($bids as &$bid) {
+    $bid['relativeTime'] = getRelativeTime($bid['bid_date_created'], 'yesterday', 'tomorrow');
+}
+
+$isAuth = $user;
+$isUserSeller = $user['user_id'] === $item['seller_id'];
+$isUserLastBettor = $user['user_id'] === ($bids[0]['user_id'] ?? null);
+$isExpired = $item['remainingHours'] === null;
+$isAllowedToBet = $isAuth && !$isUserSeller && !$isUserLastBettor && !$isExpired;
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (!$user) {
+    if (!$isAllowedToBet) {
         httpError($categories, $user, 403);
     }
 
@@ -48,17 +59,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 }
-
-$bids = getItemBids($db, $itemId);
-foreach ($bids as &$bid) {
-    $bid['relativeTime'] = getRelativeTime($bid['bid_date_created'], 'yesterday', 'tomorrow');
-}
-
-$isAuth = $user;
-$isUserSeller = $user['user_id'] === $item['seller_id'];
-$isUserLastBettor = $user['user_id'] === ($bids[0]['user_id'] ?? null);
-$isExpired = $item['remainingHours'] === null;
-$isAllowedToBet = $isAuth && !$isUserSeller && !$isUserLastBettor && !$isExpired;
 
 echo getHtml('lot.php', [
     'categories' => $categories,
