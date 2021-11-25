@@ -159,13 +159,18 @@ function esc(?string $text): string
 }
 
 /**
- * Принимает дату истечения лота и возвращает оставшееся до неё время
- * @param   string   $expireDate  Дата истечения лота
- * @return  array                 Оставшееся до истечения лота время в виде массива [ЧЧ, ММ, СС]
+ * Получает оставшееся до указанной даты время
+ * @param   string  $expireDate  Указанная дата
+ * @return  array                Оставшееся время в виде массива [ЧЧ, ММ, СС], либо null, если время истекло
  */
-function getRemainingTime(string $expireDate): array
+function getRemainingTime(string $date): ?array
 {
-    $diff = strtotime($expireDate) - time();
+    $diff = strtotime($date) - time();
+
+    if ($diff <= 0) {
+        return null;
+    }
+
     $hoursCount = str_pad(floor($diff / 3600), 2, '0', STR_PAD_LEFT);
     $minutesCount = str_pad(floor(($diff % 3600) / 60), 2, '0', STR_PAD_LEFT);
     $secondsCount = str_pad(floor(($diff % 3600) % 60), 2, '0', STR_PAD_LEFT);
@@ -268,17 +273,6 @@ function getErrorClassname(array $errors, string $fieldname): string
 }
 
 /**
- * Получает сообщение об ошибке валидации поля
- * @param   array|null   $errors     Массив с ошибками
- * @param   string       $fieldname  Имя поля
- * @return  string                   Сообщение об ошибке или пустая строка, если ошибки нет
- */
-function getErrorMessage(?array $errors, string $fieldname): string
-{
-    return esc($errors[$fieldname] ?? '');
-}
-
-/**
  * Заменяет запятую на точку в значении
  *
  * @param   string   $value  Исходное значение
@@ -302,4 +296,74 @@ function moveFile(array $fileAttributes, string $uploadFolder = 'uploads'): stri
     $fullPath = __DIR__ . $webPath;
     move_uploaded_file($fileAttributes['tmp_name'], $fullPath);
     return $webPath;
+}
+
+/**
+ * Получает время в пределах установленного интервала в относительном, "человекочитаемом", формате
+ *
+ * Допустим, текущее время 2021-11-22 15:32:33, тогда:
+ * getRelativeTime(2021-11-22 15:32:30); // 3 секунды назад
+ * getRelativeTime(2021-11-22 15:31:31); // Минуту назад
+ * getRelativeTime(2021-11-22 18:33:33); // Через 3 часа
+ * getRelativeTime(2021-11-21 22:32:33); // Вчера, в 22:32
+ * getRelativeTime(2021-11-23 15:32:33); // Завтра, в 15:32
+ * getRelativeTime(2021-11-20 12:32:33); // 2 дня назад
+ * getRelativeTime(2021-12-14 15:32:33); // Через 3 недели
+ * getRelativeTime(2021-04-21 15:32:33); // 7 месяцев назад
+ * getRelativeTime(2023-12-22 15:32:33); // Через 2 года
+ *
+ * @param  string $date Дата
+ * @param  string $min Нижний конец интервала
+ * @param  string $max Верхний конец интервала
+ * @param  string $format Формат, в котором будет выведена дата, если она за пределами интервала
+ * @return string Дата в относительном, "человекочитаемом", формате, либо в абсолютном формате, если она за пределами интервала
+ */
+function getRelativeTime(string $date, string $min = '-10 years', string $max = '10 years', string $format = "d.m.y H:i:s"): string
+{
+    $date = new DateTime($date);
+
+    if ($date < new DateTime($min) || $date > new DateTime($max)) {
+        return $date->format($format);
+    }
+
+    $periodsMap = [
+        'seconds' => ['1 minute',                                        '%s',  1,  ['секунду', 'секунды', 'секунд']],
+        'minutes' => ['1 hour',                                          '%i',  1,  ['минуту', 'минуты', 'минут']],
+        'hours'   => ['today',                                           '%h',  1,  ['час', 'часа', 'часов']],
+        'oneDay'  => [['-' => 'yesterday', '+' => 'tomorrow 23:59:59'],  null,  1,  ['-' => 'Вчера', '+' => 'Завтра']],
+        'days'    => ['1 week',                                          '%d',  1,  ['день', 'дня', 'дней']],
+        'weeks'   => ['1 month',                                         '%a',  7,  ['неделю', 'недели', 'недель']],
+        'months'  => ['1 year',                                          '%m',  1,  ['месяц', 'месяца', 'месяцев']],
+        'years'   => ['1000 years',                                      '%y',  1,  ['год', 'года', 'лет']],
+    ];
+
+    $endingWord    = ' назад';
+    $beginningWord = 'Через ';
+    $now = new DateTimeImmutable();
+    $diff = $now->diff($date);
+    $sign = $diff->format('%R');
+    $diff->invert = 0;
+
+    foreach ($periodsMap as $periodUnit => $periodConfig) {
+        $isPeriodYesterdayOrTomorrow = $periodUnit === 'oneDay';
+        $period = $now->diff(new DateTime(!$isPeriodYesterdayOrTomorrow ? $periodConfig[0] : $periodConfig[0][$sign]));
+        $period->invert = 0;
+        list (, $diffFormat, $divider, $wordForms) = $periodConfig;
+
+        if ($now->add($diff) < $now->add($period)) {
+            if (!$isPeriodYesterdayOrTomorrow) {
+                $timeUnitsCount = intval(floor($diff->format($diffFormat) / $divider));
+                $isSingleUnit = $timeUnitsCount === 1;
+
+                if ($sign === '-') {
+                    $singleUnitWord = mb_convert_case($wordForms[0], MB_CASE_TITLE, "UTF-8");
+                    return ($isSingleUnit ? $singleUnitWord : $timeUnitsCount . ' ' . getNounPluralForm($timeUnitsCount, ...$wordForms)) . $endingWord;
+                }
+
+                return $beginningWord . ($isSingleUnit ? $wordForms[0] : $timeUnitsCount . ' ' . getNounPluralForm($timeUnitsCount, ...$wordForms));
+            }
+
+            return $wordForms[$sign] . ', в ' . $date->format("H:i");
+        }
+    }
 }
