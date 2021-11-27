@@ -222,5 +222,5 @@ function setItemWinner(mysqli $db, int $itemId, int $winnerId): bool
     $stmt = $db->prepare($sql);
     $stmt->bind_param("ss", $winnerId, $itemId);
     $stmt->execute();
-    return $db->affected_rows ? true : false;
+    return (bool) $db->affected_rows;
 }
