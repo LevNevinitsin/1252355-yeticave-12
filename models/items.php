@@ -166,3 +166,37 @@ function countFoundItems(mysqli $db, string $searchString): int
     $stmt->execute();
     return $stmt->get_result()->fetch_assoc()['foundItemsCount'];
 }
+
+/**
+ * Получает истекшие лоты без определённого победителя
+ * @param   mysqli  $db  Объект с базой данных
+ * @return  array        Истекшие лоты без победителя
+ */
+function getExpiredItemsWithoutWinners(mysqli $db): array
+{
+    $sql = "
+        SELECT i.item_id,
+               i.item_name
+          FROM items AS i
+         WHERE i.item_date_expire <= NOW()
+           AND i.winner_id IS NULL
+    ";
+    return $db->query($sql)->fetch_all(MYSQLI_ASSOC);
+}
+
+/**
+ * Задаёт победителя лоту
+ * @param  mysqli   $db        Объект с базой данных
+ * @param  integer  $itemId    id лота
+ * @param  integer  $winnerId  id победителя
+ */
+function setItemWinner(mysqli $db, int $itemId, int $winnerId)
+{
+    $sql = "
+        UPDATE items SET winner_id = ? WHERE item_id = ?
+    ";
+
+    $stmt = $db->prepare($sql);
+    $stmt->bind_param("ss", $winnerId, $itemId);
+    $stmt->execute();
+}

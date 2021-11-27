@@ -1,0 +1,15 @@
+{
+    "name": "levne/yeticave",
+    "description": "Website for the sale of winter equipment based on an auction",
+    "type": "project",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Lev",
+            "email": "levnevinitsin@gmail.com"
+        }
+    ],
+    "require": {
+        "symfony/mailer": "^5.3"
+    }
+}

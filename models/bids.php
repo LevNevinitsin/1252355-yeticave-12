@@ -82,3 +82,36 @@ function getUserBids(mysqli $db, int $userId): array
     $stmt->execute();
     return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 }
+
+/**
+ * Определяет победителя лота
+ * @param   mysqli      $db      Объект с базой данных
+ * @param   integer     $itemId  id лота
+ * @return  array|null           Данные победителя
+ */
+function determineItemWinner(mysqli $db, int $itemId): ?array
+{
+    $sql = "
+        SELECT b1.user_id,
+               u.user_email,
+               u.user_name
+          FROM bids AS b1
+               INNER JOIN (
+                   SELECT b.item_id,
+                          MAX(b.bid_date_created) AS bid_date_created
+                     FROM bids AS b
+                    WHERE b.item_id = ?
+                    GROUP BY b.item_id
+               ) AS b2
+               ON b1.item_id = b2.item_id
+                  AND b1.bid_date_created = b2.bid_date_created
+
+               INNER JOIN users AS u
+               ON b1.user_id = u.user_id
+    ";
+
+    $stmt = $db->prepare($sql);
+    $stmt->bind_param("s", $itemId);
+    $stmt->execute();
+    return $stmt->get_result()->fetch_assoc();
+}
