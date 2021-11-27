@@ -168,16 +168,38 @@ function countFoundItems(mysqli $db, string $searchString): int
 }
 
 /**
- * Получает истекшие лоты без определённого победителя
+ * Получает победителей для истекших лотов без победителей
  * @param   mysqli  $db  Объект с базой данных
- * @return  array        Истекшие лоты без победителя
+ * @return  array        Победители
  */
-function getExpiredItemsWithoutWinners(mysqli $db): array
+function getNewWinners(mysqli $db): array
 {
     $sql = "
         SELECT i.item_id,
-               i.item_name
+               i.item_name,
+               winners.user_id,
+               winners.user_email,
+               winners.user_name
           FROM items AS i
+               LEFT JOIN (
+                    SELECT b1.item_id,
+                           b1.user_id,
+                           u.user_email,
+                           u.user_name
+                      FROM bids AS b1
+                           INNER JOIN (
+                               SELECT b.item_id,
+                                      MAX(b.bid_date_created) AS bid_date_created
+                                 FROM bids AS b
+                                GROUP BY b.item_id
+                           ) AS b2
+                           ON b1.item_id = b2.item_id
+                           AND b1.bid_date_created = b2.bid_date_created
+
+                           INNER JOIN users AS u
+                           ON b1.user_id = u.user_id
+               ) AS winners
+               ON i.item_id = winners.item_id
          WHERE i.item_date_expire <= NOW()
            AND i.winner_id IS NULL
     ";
@@ -186,11 +208,12 @@ function getExpiredItemsWithoutWinners(mysqli $db): array
 
 /**
  * Задаёт победителя лоту
- * @param  mysqli   $db        Объект с базой данных
- * @param  integer  $itemId    id лота
- * @param  integer  $winnerId  id победителя
+ * @param   mysqli   $db        Объект с базой данных
+ * @param   integer  $itemId    id лота
+ * @param   integer  $winnerId  id победителя
+ * @return  boolean             true, если было обновлено новыми данными, иначе false
  */
-function setItemWinner(mysqli $db, int $itemId, int $winnerId)
+function setItemWinner(mysqli $db, int $itemId, int $winnerId): bool
 {
     $sql = "
         UPDATE items SET winner_id = ? WHERE item_id = ?
@@ -199,4 +222,5 @@ function setItemWinner(mysqli $db, int $itemId, int $winnerId)
     $stmt = $db->prepare($sql);
     $stmt->bind_param("ss", $winnerId, $itemId);
     $stmt->execute();
+    return $db->affected_rows ? true : false;
 }
