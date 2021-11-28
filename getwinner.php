@@ -16,27 +16,22 @@ $newWinners = getNewWinners($db);
 foreach ($newWinners as $newWinner) {
     $itemId = $newWinner['item_id'];
     $userId = $newWinner['user_id'];
+    $wasSet = setItemWinner($db, $itemId, $userId);
 
-    if ($userId) {
-        $wasSet = setItemWinner($db, $itemId, $userId);
+    if ($wasSet) {
+        $itemLink = "//$serverName/lot.php?item_id=$itemId";
 
-        if ($wasSet) {
-            $itemLink = "//$serverName/lot.php?item_id=$itemId";
+        $message = new Email();
+        $message->to($newWinner['user_email']);
+        $message->from("keks@phpdemo.ru");
+        $message->subject("Ваша ставка победила");
+        $message->html(includeTemplate('email.php', [
+            'userName' => $newWinner['user_name'],
+            'itemLink' => $itemLink,
+            'itemName' => $newWinner['item_name'],
+            'betsPageLink' => $betsPageLink,
+        ]));
 
-            $message = new Email();
-            $message->to($newWinner['user_email']);
-            $message->from("keks@phpdemo.ru");
-            $message->subject("Ваша ставка победила");
-            $message->html(includeTemplate('email.php', [
-                'userName' => $newWinner['user_name'],
-                'itemLink' => $itemLink,
-                'itemName' => $newWinner['item_name'],
-                'betsPageLink' => $betsPageLink,
-            ]));
-
-            $mailer->send($message);
-        }
-    } else {
-        setItemWinner($db, $itemId, 0);
+        $mailer->send($message);
     }
 }

@@ -175,34 +175,19 @@ function countFoundItems(mysqli $db, string $searchString): int
 function getNewWinners(mysqli $db): array
 {
     $sql = "
-        SELECT i.item_id,
-               i.item_name,
-               winners.user_id,
-               winners.user_email,
-               winners.user_name
+        SELECT b.user_id,
+               u.user_email,
+               u.user_name,
+               i.item_id,
+               i.item_name
           FROM items AS i
-               LEFT JOIN (
-                    SELECT b1.item_id,
-                           b1.user_id,
-                           u.user_email,
-                           u.user_name
-                      FROM bids AS b1
-                           INNER JOIN (
-                               SELECT b.item_id,
-                                      MAX(b.bid_date_created) AS bid_date_created
-                                 FROM bids AS b
-                                GROUP BY b.item_id
-                           ) AS b2
-                           ON b1.item_id = b2.item_id
-                           AND b1.bid_date_created = b2.bid_date_created
-
-                           INNER JOIN users AS u
-                           ON b1.user_id = u.user_id
-               ) AS winners
-               ON i.item_id = winners.item_id
+               INNER JOIN bids  AS b ON i.item_id = b.item_id
+               INNER JOIN users AS u ON b.user_id = u.user_id
          WHERE i.item_date_expire <= NOW()
            AND i.winner_id IS NULL
+           AND b.bid_price = (SELECT MAX(b1.bid_price) FROM bids AS b1 WHERE b1.item_id = i.item_id)
     ";
+
     return $db->query($sql)->fetch_all(MYSQLI_ASSOC);
 }
 
