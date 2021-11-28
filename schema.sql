@@ -23,7 +23,8 @@ CREATE TABLE IF NOT EXISTS `bids` (
   `user_id` int(11) unsigned NOT NULL,
   `item_id` int(11) unsigned NOT NULL,
   `bid_date_created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`bid_id`)
+  PRIMARY KEY (`bid_id`),
+  KEY `bid_sort` (`item_id`,`bid_price`)
 ) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4;
 
 -- Dumping data for table yeticave.bids: ~6 rows (approximately)
@@ -74,8 +75,8 @@ CREATE TABLE IF NOT EXISTS `items` (
   `item_date_expire` datetime NOT NULL,
   `item_date_added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`item_id`),
-  KEY `item_date_expire` (`item_date_expire`),
   KEY `category_id` (`category_id`),
+  KEY `winnersIndex` (`item_date_expire`,`winner_id`),
   FULLTEXT KEY `item_ft_search` (`item_name`,`item_description`),
   CONSTRAINT `fk_item_category` FOREIGN KEY (`category_id`) REFERENCES `categories` (`category_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=54 DEFAULT CHARSET=utf8mb4;
