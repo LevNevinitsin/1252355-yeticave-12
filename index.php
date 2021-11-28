@@ -1,6 +1,6 @@
 <?php
 require __DIR__ . '/initialize.php';
-require __DIR__ . '/models/items.php';
+require __DIR__ . '/getwinner.php';
 
 $items = getNewItems($db);
 foreach ($items as &$item) {

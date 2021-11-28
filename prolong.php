@@ -9,7 +9,8 @@ function prolongExpiredDates(mysqli $db, int $min = 1, int $max = 5)
 {
     $sql = "
         UPDATE items
-           SET item_date_expire = DATE_ADD(NOW(), INTERVAL FLOOR(RAND()*(? - ? + 1)) + ? DAY)
+           SET item_date_expire = DATE_ADD(NOW(), INTERVAL FLOOR(RAND()*(? - ? + 1)) + ? DAY),
+               winner_id = NULL
          WHERE item_date_expire < NOW()
     ";
     $stmt = $db->prepare($sql);

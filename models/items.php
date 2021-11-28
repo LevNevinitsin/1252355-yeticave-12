@@ -166,3 +166,46 @@ function countFoundItems(mysqli $db, string $searchString): int
     $stmt->execute();
     return $stmt->get_result()->fetch_assoc()['foundItemsCount'];
 }
+
+/**
+ * Получает победителей для истекших лотов без победителей
+ * @param   mysqli  $db  Объект с базой данных
+ * @return  array        Победители
+ */
+function getNewWinners(mysqli $db): array
+{
+    $sql = "
+        SELECT b.user_id,
+               u.user_email,
+               u.user_name,
+               i.item_id,
+               i.item_name
+          FROM items AS i
+               INNER JOIN bids  AS b ON i.item_id = b.item_id
+               INNER JOIN users AS u ON b.user_id = u.user_id
+         WHERE i.item_date_expire <= NOW()
+           AND i.winner_id IS NULL
+           AND b.bid_price = (SELECT MAX(b1.bid_price) FROM bids AS b1 WHERE b1.item_id = i.item_id)
+    ";
+
+    return $db->query($sql)->fetch_all(MYSQLI_ASSOC);
+}
+
+/**
+ * Задаёт победителя лоту
+ * @param   mysqli   $db        Объект с базой данных
+ * @param   integer  $itemId    id лота
+ * @param   integer  $winnerId  id победителя
+ * @return  boolean             true, если было обновлено новыми данными, иначе false
+ */
+function setItemWinner(mysqli $db, int $itemId, int $winnerId): bool
+{
+    $sql = "
+        UPDATE items SET winner_id = ? WHERE item_id = ?
+    ";
+
+    $stmt = $db->prepare($sql);
+    $stmt->bind_param("ss", $winnerId, $itemId);
+    $stmt->execute();
+    return (bool) $db->affected_rows;
+}

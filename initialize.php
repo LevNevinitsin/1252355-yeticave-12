@@ -12,7 +12,7 @@ $config = require $configPath;
 require __DIR__ . '/models/categories.php';
 require __DIR__ . '/helpers.php';
 
-date_default_timezone_set('Europe/Moscow'); // TODO: в конфиг
+date_default_timezone_set($config['defaultTimezone']);
 $user = $_SESSION['user'] ?? null;
 
 $dbConfig = $config['db'];
