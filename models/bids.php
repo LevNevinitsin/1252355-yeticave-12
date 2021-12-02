@@ -8,14 +8,8 @@
  */
 function insertBid(mysqli $db, int $userId, int $itemId, array $bidData)
 {
-    $sql = "
-        INSERT INTO bids (bid_price, user_id, item_id) VALUES
-        (?, ?, ?)
-    ";
-
-    $stmt = $db->prepare($sql);
-    $stmt->bind_param("sss", $bidData['cost'], $userId, $itemId);
-    $stmt->execute();
+    $sql = "INSERT INTO bids (bid_price, user_id, item_id) VALUES (?, ?, ?)";
+    dbProcessDml($db, $sql, [$bidData['cost'], $userId, $itemId]);
 }
 
 /**
@@ -39,10 +33,7 @@ function getItemBids(mysqli $db, int $itemId): array
          ORDER BY bid_date_created DESC
     ";
 
-    $stmt = $db->prepare($sql);
-    $stmt->bind_param("s", $itemId);
-    $stmt->execute();
-    return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    return dbSelectAll($db, $sql, [$itemId]);
 }
 
 /**
@@ -77,8 +68,5 @@ function getUserBids(mysqli $db, int $userId): array
          ORDER BY b.bid_date_created DESC
     ";
 
-    $stmt = $db->prepare($sql);
-    $stmt->bind_param("s", $userId);
-    $stmt->execute();
-    return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    return dbSelectAll($db, $sql, [$userId]);
 }

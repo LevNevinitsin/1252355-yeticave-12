@@ -29,10 +29,8 @@ function getItem(mysqli $db, int $itemId): ?array
                ON i.category_id = c.category_id
          WHERE i.item_id = ?
     ";
-    $stmt = $db->prepare($sql);
-    $stmt->bind_param("s", $itemId);
-    $stmt->execute();
-    return $stmt->get_result()->fetch_assoc();
+
+    return dbSelectAssoc($db, $sql, [$itemId]);
 }
 
 /**
@@ -64,7 +62,8 @@ function getNewItems(mysqli $db): ?array
          WHERE item_date_expire > NOW()
          ORDER BY item_date_added DESC
     ";
-    return $db->query($sql)->fetch_all(MYSQLI_ASSOC);
+
+    return dbSelectAll($db, $sql);
 }
 
 /**
@@ -89,9 +88,7 @@ function insertItem(mysqli $db, array $itemData): int
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     ";
 
-    $stmt = $db->prepare($sql);
-    $stmt->bind_param(
-        "ssssssss",
+    $params = [
         $itemData['lot-name'],
         $itemData['description'],
         $itemData['image']['webPath'],
@@ -100,10 +97,9 @@ function insertItem(mysqli $db, array $itemData): int
         $itemData['user_id'],
         $itemData['category_id'],
         $itemData['lot-date']
-    );
-    $stmt->execute();
+    ];
 
-    return $db->insert_id;
+    return dbProcessDml($db, $sql, $params)['insertId'];
 }
 
 /**
@@ -140,10 +136,7 @@ function searchItems(mysqli $db, string $searchString, int $pageItemsLimit, int 
          LIMIT ? OFFSET ?
     ";
 
-    $stmt = $db->prepare($sql);
-    $stmt->bind_param("sss", $searchString, $pageItemsLimit, $offset);
-    $stmt->execute();
-    return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    return dbSelectAll($db, $sql, [$searchString, $pageItemsLimit, $offset]);
 }
 
 /**
@@ -161,10 +154,7 @@ function countFoundItems(mysqli $db, string $searchString): int
            AND MATCH(item_name, item_description) AGAINST(?)
     ";
 
-    $stmt = $db->prepare($sql);
-    $stmt->bind_param("s", $searchString);
-    $stmt->execute();
-    return $stmt->get_result()->fetch_assoc()['foundItemsCount'];
+    return dbSelectCell($db, $sql, 'foundItemsCount', [$searchString]);
 }
 
 /**
@@ -188,7 +178,7 @@ function getNewWinners(mysqli $db): array
            AND b.bid_price = (SELECT MAX(b1.bid_price) FROM bids AS b1 WHERE b1.item_id = i.item_id)
     ";
 
-    return $db->query($sql)->fetch_all(MYSQLI_ASSOC);
+    return dbSelectAll($db, $sql);
 }
 
 /**
@@ -200,12 +190,6 @@ function getNewWinners(mysqli $db): array
  */
 function setItemWinner(mysqli $db, int $itemId, int $winnerId): bool
 {
-    $sql = "
-        UPDATE items SET winner_id = ? WHERE item_id = ?
-    ";
-
-    $stmt = $db->prepare($sql);
-    $stmt->bind_param("ss", $winnerId, $itemId);
-    $stmt->execute();
-    return (bool) $db->affected_rows;
+    $sql = "UPDATE items SET winner_id = ? WHERE item_id = ?";
+    return (bool) dbProcessDml($db, $sql, [$winnerId, $itemId])['affectedRowsCount'];
 }

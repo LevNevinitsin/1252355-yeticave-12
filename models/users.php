@@ -17,16 +17,14 @@ function insertUser(mysqli $db, array $formData): int
         VALUES (?, ?, ?, ?)
     ";
 
-    $stmt = $db->prepare($sql);
-    $stmt->bind_param(
-        "ssss",
+    $params = [
         $formData['email'],
         $formData['name'],
         $formData['password'],
-        $formData['message']
-    );
-    $stmt->execute();
-    return $db->insert_id;
+        $formData['message'],
+    ];
+
+    return dbProcessDml($db, $sql, $params)['insertId'];
 }
 
 /**
@@ -38,8 +36,5 @@ function insertUser(mysqli $db, array $formData): int
 function getUserByEmail(mysqli $db, string $email): ?array
 {
     $sql = "SELECT * FROM users WHERE user_email = ?";
-    $stmt = $db->prepare($sql);
-    $stmt->bind_param("s", $email);
-    $stmt->execute();
-    return $stmt->get_result()->fetch_assoc();
+    return dbSelectAssoc($db, $sql, [$email]);
 }

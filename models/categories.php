@@ -7,5 +7,5 @@
 function getCategories(mysqli $db): array
 {
     $sql = "SELECT category_id, category_name, category_code FROM categories";
-    return $db->query($sql)->fetch_all(MYSQLI_ASSOC);
+    return dbSelectAll($db, $sql);
 }

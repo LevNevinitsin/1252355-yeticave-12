@@ -21,56 +21,87 @@ function isDateValid(string $date) : bool {
 }
 
 /**
- * Создает подготовленное выражение на основе готового SQL запроса и переданных данных
- *
- * @param $link mysqli Ресурс соединения
- * @param $sql string SQL запрос с плейсхолдерами вместо значений
- * @param array $data Данные для вставки на место плейсхолдеров
- *
- * @return mysqli_stmt Подготовленное выражение
+ * Выполняет INSERT, UPDATE или DELETE запрос к базе данных
+ * @param   mysqli       $db           Объект с базой данных
+ * @param   string       $sql          Sql-запрос
+ * @param   array        $params       Параметры запроса
+ * @param   string|null  $typesString  Строка с типами параметров
+ * @return  array                      Массив со значениями [количество затронутых строк,
+ *                                     созданное для столбца AUTO_INCREMENT значение]
  */
-function dbGetPrepareStmt($link, $sql, $data = []) {
-    $stmt = mysqli_prepare($link, $sql);
+function dbProcessDml(mysqli $db, string $sql, ?array $params = null, ?string $typesString = null): array
+{
+    $params ? dbRunPreparedStmt($db, $sql, $params, $typesString) : $db->query($sql);
+    return ['affectedRowsCount' => $db->affected_rows, 'insertId' => $db->insert_id];
+}
 
-    if ($stmt === false) {
-        $errorMsg = 'Не удалось инициализировать подготовленное выражение: ' . mysqli_error($link);
-        die($errorMsg);
-    }
+/**
+ * Выполняет выборку данных из таблицы
+ * @param   mysqli       $db           Объект с базой данных
+ * @param   string       $sql          Sql-запрос
+ * @param   array        $params       Параметры запроса
+ * @param   string|null  $typesString  Строка с типами параметров
+ * @return  array|null                 Данные таблицы
+ */
+function dbSelectAll(mysqli $db, string $sql, ?array $params = null, ?string $typesString = null): ?array
+{
+    return dbSelect($db, $sql, $params, $typesString)->fetch_all(MYSQLI_ASSOC);
+}
 
-    if ($data) {
-        $types = '';
-        $stmt_data = [];
+/**
+ * Выполняет выборку данных из одной строки таблицы
+ * @param   mysqli       $db           Объект с базой данных
+ * @param   string       $sql          Sql-запрос
+ * @param   array        $params       Параметры запроса
+ * @param   string|null  $typesString  Строка с типами параметров
+ * @return  array|null                 Данные строки
+ */
+function dbSelectAssoc(mysqli $db, string $sql, ?array $params = null, ?string $typesString = null): ?array
+{
+    return dbSelect($db, $sql, $params, $typesString)->fetch_assoc();
+}
 
-        foreach ($data as $value) {
-            $type = 's';
+/**
+ * Выполняет выборку значения из конкретной ячейки
+ * @param   mysqli       $db           Объект с базой данных
+ * @param   string       $sql          Sql-запрос
+ * @param   string       $cellName     Название ячейки
+ * @param   array        $params       Параметры запроса
+ * @param   string|null  $typesString  Строка с типами параметров
+ * @return  mixed                      Значение ячейки
+ */
+function dbSelectCell(mysqli $db, string $sql, string $cellName, ?array $params = null, ?string $typesString = null)
+{
+    return dbSelect($db, $sql, $params, $typesString)->fetch_assoc()[$cellName] ?? null;
+}
 
-            if (is_int($value)) {
-                $type = 'i';
-            }
-            else if (is_string($value)) {
-                $type = 's';
-            }
-            else if (is_double($value)) {
-                $type = 'd';
-            }
+/**
+ * Выполняет SELECT-запрос, возвращая объект mysqli_result
+ * @param   mysqli         $db           Объект с базой данных
+ * @param   string         $sql          Sql-запрос
+ * @param   array          $params       Параметры запроса
+ * @param   string|null    $typesString  Строка с типами параметров
+ * @return  mysqli_result                Объект, представляющий результирующий набор, полученный из запроса в базу данных
+ */
+function dbSelect(mysqli $db, string $sql, ?array $params = null, ?string $typesString = null): mysqli_result
+{
+    return $params ? dbRunPreparedStmt($db, $sql, $params, $typesString)->get_result() : $db->query($sql);
+}
 
-            if ($type) {
-                $types .= $type;
-                $stmt_data[] = $value;
-            }
-        }
-
-        $values = array_merge([$stmt, $types], $stmt_data);
-
-        $func = 'mysqli_stmt_bind_param';
-        $func(...$values);
-
-        if (mysqli_errno($link) > 0) {
-            $errorMsg = 'Не удалось связать подготовленное выражение с параметрами: ' . mysqli_error($link);
-            die($errorMsg);
-        }
-    }
-
+/**
+ * Создает подготовленное выражение и выполняет его
+ * @param   mysqli       $db           Объект с базой данных
+ * @param   string       $sql          Sql-запрос
+ * @param   array        $params       Параметры запроса
+ * @param   string|null  $typesString  Строка с типами параметров
+ * @return  mysqli_stmt                Объект, представляющий подготовленное выражение
+ */
+function dbRunPreparedStmt(mysqli $db, string $sql, array $params, ?string $typesString): mysqli_stmt
+{
+    $stmt = $db->prepare($sql);
+    $typesString = $typesString ?? str_repeat('s', count($params));
+    $stmt->bind_param($typesString, ...$params);
+    $stmt->execute();
     return $stmt;
 }
 
