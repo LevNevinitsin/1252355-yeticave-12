@@ -12,6 +12,10 @@ $config = require $configPath;
 require __DIR__ . '/models/categories.php';
 require __DIR__ . '/helpers.php';
 
+error_reporting(E_ALL);
+ini_set('display_errors', $config['env_local']);
+ini_set('log_errors', !$config['env_local']);
+
 date_default_timezone_set($config['defaultTimezone']);
 $user = $_SESSION['user'] ?? null;
 
@@ -25,3 +29,13 @@ require __DIR__ . '/prolong.php';
 prolongExpiredDates($db);
 
 $categories = getCategories($db);
+
+if (!filter_var(ini_get('display_errors'), FILTER_VALIDATE_BOOLEAN)) {
+    set_exception_handler(function ($e) use ($categories, $user) {
+        httpError($categories, $user, 500);
+    });
+
+    set_error_handler(function ($e) use ($categories, $user) {
+        httpError($categories, $user, 500);
+    });
+}
