@@ -266,14 +266,14 @@ function getBidsCountText(int $bidsCount, string $zeroCountText = 'Старто�
 }
 
 /**
- * Получает атрибут href со ссылкой на страницу поиска
- * @param   string   $searchString  Значение поисковой строки
- * @param   integer  $page          Номер нужной страницы
- * @return  string                  Итоговый атрибут href
+ * Получает query string без номера страницы
+ * @param array $qsParameters qs-параметры
+ * @return string query string без номера страницы
  */
-function getSearchLink(string $searchString, int $page): string
+function getQsWithoutPageNumber(array $qsParameters): string
 {
-    return "href='/search.php?search=$searchString&page=$page'";
+    unset($qsParameters['page']);
+    return http_build_query($qsParameters) . '&page=';
 }
 
 /**

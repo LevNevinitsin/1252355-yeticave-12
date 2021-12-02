@@ -27,6 +27,7 @@ if ($currentPage > $pagesCount) {
 
 $offset = ($currentPage - 1) * $pageItemsLimit;
 $pages = range(1, $pagesCount);
+$addressWithoutPageNumber = $_SERVER['PHP_SELF'] . '?' . getQsWithoutPageNumber($_GET);
 
 $categoryItems = getItemsByCategory($db, $categoryId, $pageItemsLimit, $offset);
 $categoryItems = includeCbResultsForEachElement($categoryItems, 'getRemainingTime', ['item_date_expire']);
@@ -44,4 +45,5 @@ echo getHtml('lots-by-category.php', [
     'pagesCount' => $pagesCount,
     'currentPage' => $currentPage,
     'pages' => $pages,
+    'addressWithoutPageNumber' => $addressWithoutPageNumber,
 ], $categories, $user, $categoryName);
