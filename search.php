@@ -31,6 +31,7 @@ if (!$searchMessage) {
     $offset = ($currentPage - 1) * $pageItemsLimit;
     $pages = range(1, $pagesCount);
     $foundItems = searchItems($db, $searchString, $pageItemsLimit, $offset);
+    $foundItems = includeCbResultsForEachElement($foundItems, 'getRemainingTime', ['item_date_expire']);
 }
 
 echo getHtml('search.php', [

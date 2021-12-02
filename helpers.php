@@ -190,6 +190,47 @@ function esc(?string $text): string
 }
 
 /**
+ * Добавляет в каждый элемент двумерного массива результаты выполнения переданной функции
+ * @param   array       $items          Двумерный массив
+ * @param   string      $cb             Имя передаваемой функции
+ *
+ * @param   array       $itemKeys
+ * Имена ключей, по которым коллбек будет обращаться к значениям внутри элемента.
+ * Порядок указания ключей должен соответствовать порядку параметров в коллбеке.
+ *
+ * @param   mixed|null  $resultsScheme
+ * Не указывается вообще, если коллбек возвращает ассоциативный массив;
+ * указывается в виде массива, если коллбек возвращает обычный массив;
+ * в виде строки, если коллбек возвращает скаляр.
+ *
+ * @return  array                       Обновлённый двумерный массив
+ */
+function includeCbResultsForEachElement(
+    array $items,
+    string $cb,
+    array $itemKeys,
+    $resultsScheme = null
+): array
+{
+    foreach ($items as &$item) {
+        $itemParams = array_map(function($itemKey) use ($item) { return $item[$itemKey]; }, $itemKeys);
+        $cbResult = $cb(...$itemParams);
+
+        if (!$resultsScheme) {
+            $item = array_merge($item, $cbResult);
+        } elseif (gettype($resultsScheme) === 'array') {
+            foreach ($resultsScheme as $key => $resultKey) {
+                $item[$resultKey] = $cbResult[$key];
+            }
+        } else {
+            $item[$resultsScheme] = $cb(...$itemParams);
+        }
+    }
+
+    return $items;
+}
+
+/**
  * Получает оставшееся до указанной даты время
  * @param   string  $expireDate  Указанная дата
  * @return  array                Оставшееся время в виде массива [ЧЧ, ММ, СС], либо null, если время истекло
@@ -205,7 +246,12 @@ function getRemainingTime(string $date): ?array
     $hoursCount = str_pad(floor($diff / 3600), 2, '0', STR_PAD_LEFT);
     $minutesCount = str_pad(floor(($diff % 3600) / 60), 2, '0', STR_PAD_LEFT);
     $secondsCount = str_pad(floor(($diff % 3600) % 60), 2, '0', STR_PAD_LEFT);
-    return [$hoursCount, $minutesCount, $secondsCount];
+
+    return [
+        'remainingHours' => $hoursCount,
+        'remainingMinutes' => $minutesCount,
+        'remainingSeconds' => $secondsCount,
+    ];
 }
 
 /**
