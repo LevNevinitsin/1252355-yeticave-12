@@ -339,6 +339,36 @@ function httpError(array $categories, ?array $user, int $responseCode, ?string $
 }
 
 /**
+ * Инициализирует пагинацию, возвращая количество страниц и смещение выборки
+ * @param   mixed    $currentPage     Текущая страница
+ * @param   mixed    $itemCount       Количество итемов
+ * @param   integer  $pageItemsLimit  Максимальное число итемов на странице
+ * @param   string   $errorCb         Функция для вызова в случае, если номер текущей страницы больше максимального
+ * @param   array    $errorCbParams   Параметры для этой функции
+ * @return  array                     Массив вида [количество страниц, смещение выборки]
+ */
+function initializePagination(
+    $currentPage,
+    $itemCount,
+    int $pageItemsLimit,
+    string $errorCb,
+    array $errorCbParams
+): array
+{
+    $currentPage = (int) ($currentPage);
+    $pagesCount = (int) ceil($itemCount / $pageItemsLimit) ?: 1;
+
+    if ($currentPage > $pagesCount) {
+        $errorCb(...$errorCbParams);
+    }
+
+    $offset = ($currentPage - 1) * $pageItemsLimit;
+    $pages = range(1, $pagesCount);
+
+    return [$pages, $offset];
+}
+
+/**
  * Получает имя класса-модификатора для поля, если есть ошибка валидации
  * @param   array    $errors     Массив с ошибками
  * @param   string   $fieldname  Имя поля

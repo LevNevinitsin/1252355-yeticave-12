@@ -16,19 +16,17 @@ if (
 
 require __DIR__ . '/models/items.php';
 $categoryItemsCount = countCategoryItems($db, $categoryId);
-
 $pageItemsLimit = 9;
-$currentPage = (int) ($currentPage);
-$pagesCount = (int) ceil($categoryItemsCount / $pageItemsLimit) ?: 1;
 
-if ($currentPage > $pagesCount) {
-    httpError($categories, $user, 404);
-}
+list ($pages, $offset) = initializePagination(
+    $currentPage,
+    $categoryItemsCount,
+    $pageItemsLimit,
+    'httpError',
+    [$categories, $user, 404]
+);
 
-$offset = ($currentPage - 1) * $pageItemsLimit;
-$pages = range(1, $pagesCount);
 $addressWithoutPageNumber = $_SERVER['PHP_SELF'] . '?' . getQsWithoutPageNumber($_GET);
-
 $categoryItems = getItemsByCategory($db, $categoryId, $pageItemsLimit, $offset);
 $categoryItems = includeCbResultsForEachElement($categoryItems, 'getRemainingTime', ['item_date_expire']);
 
@@ -42,7 +40,7 @@ echo getHtml('lots-by-category.php', [
     'categoryId' => $categoryId,
     'categoryItems' => $categoryItems,
     'categoryName' => $categoryName,
-    'pagesCount' => $pagesCount,
+    'pagesCount' => count($pages),
     'currentPage' => $currentPage,
     'pages' => $pages,
     'addressWithoutPageNumber' => $addressWithoutPageNumber,
