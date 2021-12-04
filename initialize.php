@@ -13,8 +13,9 @@ require __DIR__ . '/models/categories.php';
 require __DIR__ . '/helpers.php';
 
 error_reporting(E_ALL);
-ini_set('display_errors', $config['env_local']);
-ini_set('log_errors', !$config['env_local']);
+$isEnvLocal = $config['env_local'] ?? false;
+ini_set('display_errors', $isEnvLocal);
+ini_set('log_errors', !$isEnvLocal);
 
 date_default_timezone_set($config['defaultTimezone']);
 $user = $_SESSION['user'] ?? null;
