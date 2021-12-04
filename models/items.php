@@ -34,11 +34,23 @@ function getItem(mysqli $db, int $itemId): ?array
 }
 
 /**
- * Получает действующие лоты, отсортированные от новых к старым
- * @param   mysqli      $db  Объект с базой данных
- * @return  array|null       Ассоциативный массив с данными лотов
+ * Получает действующие лоты. Может задавать смещение выборки и ограничивать её по поисковому запросу,
+ * по id категории и по максимальному количеству итемов.
+ *
+ * @param  mysqli       $db              Объект с базой данных
+ * @param  integer|null $pageItemsLimit  Максимальное количество элементов на странице
+ * @param  integer|null $offset          Смещение выборки
+ * @param  string|null  $searchString    Значение поисковой строки
+ * @param  integer|null $categoryId      id категории
+ * @return array|null                    Выбранные лоты
  */
-function getNewItems(mysqli $db): ?array
+function getItems(
+    mysqli $db,
+    ?int $pageItemsLimit = 9,
+    ?int $offset = 0,
+    ?string $searchString = null,
+    ?int $categoryId = null
+): ?array
 {
     $sql = "
         SELECT i.item_id,
@@ -60,12 +72,24 @@ function getNewItems(mysqli $db): ?array
                ) AS b
                ON i.item_id = b.item_id
          WHERE item_date_expire > NOW()
-         ORDER BY item_date_added DESC
     ";
 
-    return dbSelectAll($db, $sql);
-}
+    $params = [$pageItemsLimit, $offset];
 
+    if ($searchString) {
+        $sql .= "AND MATCH(i.item_name, i.item_description) AGAINST(?) LIMIT ? OFFSET ?";
+        array_unshift($params, $searchString);
+    } else {
+        if ($categoryId) {
+            $sql .= "AND c.category_id = ?";
+            array_unshift($params, $categoryId);
+        }
+
+        $sql .= " ORDER BY item_date_added DESC LIMIT ? OFFSET ?";
+    }
+
+    return dbSelectAll($db, $sql, $params);
+}
 /**
  * Добавляет в базу данных запись с новым лотом
  * @param   mysqli   $db        Объект с базой данных
@@ -100,43 +124,6 @@ function insertItem(mysqli $db, array $itemData): int
     ];
 
     return dbProcessDml($db, $sql, $params)['insertId'];
-}
-
-/**
- * Находит лоты с учётом максимального числа элементов на странице и смещения выборки
- * @param   mysqli      $db              Объект с базой данных
- * @param   string      $searchString    Значение поисковой строки
- * @param   integer     $pageItemsLimit  Максимальное количество элементов на странице
- * @param   integer     $offset          Смещение выборки
- * @return  array|null                   Найденные лоты
- */
-function searchItems(mysqli $db, string $searchString, int $pageItemsLimit, int $offset): array
-{
-    $sql = "
-        SELECT i.item_id,
-               i.item_name,
-               i.item_image,
-               i.item_date_expire,
-               COALESCE(b.top_bid, i.item_initial_price) AS current_price,
-               COALESCE(b.bids_count, 0) AS bids_count,
-               c.category_name
-          FROM items AS i
-               INNER JOIN categories AS c
-               ON i.category_id = c.category_id
-               LEFT JOIN (
-                   SELECT item_id,
-                          MAX(bid_price) AS top_bid,
-                          COUNT(bid_id) AS bids_count
-                     FROM bids
-                    GROUP BY item_id
-               ) AS b
-               ON i.item_id = b.item_id
-         WHERE item_date_expire > NOW()
-           AND MATCH(i.item_name, i.item_description) AGAINST(?)
-         LIMIT ? OFFSET ?
-    ";
-
-    return dbSelectAll($db, $sql, [$searchString, $pageItemsLimit, $offset]);
 }
 
 /**
@@ -210,42 +197,4 @@ function countCategoryItems(mysqli $db, int $categoryId): int
     ";
 
     return dbSelectCell($db, $sql, 'categoryItemsCount', [$categoryId]);
-}
-
-/**
- * Получает лоты, относящиеся к определённой категории
- * @param   mysqli      $db              Объект с базой данных
- * @param   integer     $categoryId      id категории
- * @param   integer     $pageItemsLimit  Максимальное количество элементов на странице
- * @param   integer     $offset          Смещение выборки
- * @return  array|null                   Лоты, относящиеся к категории
- */
-function getItemsByCategory(mysqli $db, int $categoryId, int $pageItemsLimit, int $offset): ?array
-{
-    $sql = "
-        SELECT i.item_id,
-               i.item_name,
-               i.item_image,
-               i.item_date_expire,
-               COALESCE(b.top_bid, i.item_initial_price) AS current_price,
-               COALESCE(b.bids_count, 0) AS bids_count,
-               c.category_name
-          FROM items AS i
-               INNER JOIN categories AS c
-               ON i.category_id = c.category_id
-               LEFT JOIN (
-                   SELECT item_id,
-                          MAX(bid_price) AS top_bid,
-                          COUNT(bid_id) AS bids_count
-                     FROM bids
-                    GROUP BY item_id
-               ) AS b
-               ON i.item_id = b.item_id
-         WHERE item_date_expire > NOW()
-           AND c.category_id = ?
-         ORDER BY item_date_added DESC
-         LIMIT ? OFFSET ?
-    ";
-
-    return dbSelectAll($db, $sql, [$categoryId, $pageItemsLimit, $offset]);
 }

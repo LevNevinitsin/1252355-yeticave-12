@@ -27,7 +27,7 @@ list ($pages, $offset) = initializePagination(
 );
 
 $addressWithoutPageNumber = $_SERVER['PHP_SELF'] . '?' . getQsWithoutPageNumber($_GET);
-$categoryItems = getItemsByCategory($db, $categoryId, $pageItemsLimit, $offset);
+$categoryItems = getItems($db, $pageItemsLimit, $offset, null, $categoryId);
 $categoryItems = includeCbResultsForEachElement($categoryItems, 'getRemainingTime', ['item_date_expire']);
 
 $categoryData = array_merge(...array_filter($categories, function($category) use ($categoryId) {

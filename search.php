@@ -24,14 +24,14 @@ if (!$searchMessage) {
 
     list ($pages, $offset) = initializePagination(
         $currentPage,
-        $categoryItemsCount,
+        $foundItemsCount,
         $pageItemsLimit,
         'httpError',
         [$categories, $user, 404]
     );
 
     $addressWithoutPageNumber = $_SERVER['PHP_SELF'] . '?' . getQsWithoutPageNumber($_GET);
-    $foundItems = searchItems($db, $searchString, $pageItemsLimit, $offset);
+    $foundItems = getItems($db, $pageItemsLimit, $offset, $searchString);
     $foundItems = includeCbResultsForEachElement($foundItems, 'getRemainingTime', ['item_date_expire']);
 }
 
