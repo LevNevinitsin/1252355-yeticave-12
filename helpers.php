@@ -334,6 +334,10 @@ function httpError(array $categories, ?array $user, int $responseCode, ?string $
             'title' => 'Страница не найдена',
             'errorText' => 'Данной страницы не существует на сайте.',
         ],
+        500 => [
+            'title' => 'Технические работы',
+            'errorText' => 'Извините, ведутся временные технические работы',
+        ]
     ];
 
     $errorInfo = $errorsMap[$responseCode];
