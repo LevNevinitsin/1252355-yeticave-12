@@ -10,9 +10,10 @@
     </section>
     <?php if ($pagesCount > 1): ?>
         <?php echo includeTemplate('pagination.php', [
+            'pageAddress' => $pageAddress,
+            'qsParameters' => $qsParameters,
             'currentPage' => $currentPage,
             'searchString' => $searchString,
-            'addressWithoutPageNumber' => $addressWithoutPageNumber,
             'pages' => $pages,
             'pagesCount' => $pagesCount,
         ]) ?>

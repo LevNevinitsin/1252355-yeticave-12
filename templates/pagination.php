@@ -3,7 +3,7 @@
     <li class="pagination-item pagination-item-prev pagination-item-disabled"><a>Назад</a></li>
     <?php else: ?>
     <li class="pagination-item pagination-item-prev">
-        <a href="<?= esc($addressWithoutPageNumber . ($currentPage - 1)) ?>">Назад</a>
+        <a href="<?= esc(getModifiedLink($pageAddress, $qsParameters, ['page' => $currentPage - 1])) ?>">Назад</a>
     </li>
     <?php endif ?>
 
@@ -12,7 +12,7 @@
         <li class="pagination-item pagination-item-active"><a><?= esc($page) ?></a></li>
         <?php else: ?>
         <li class="pagination-item">
-            <a href="<?= esc($addressWithoutPageNumber . $page) ?>"><?= esc($page) ?></a>
+            <a href="<?= esc(getModifiedLink($pageAddress, $qsParameters, ['page' => $page])) ?>"><?= esc($page) ?></a>
         </li>
         <?php endif ?>
     <?php endforeach ?>
@@ -21,7 +21,7 @@
     <li class="pagination-item pagination-item-next pagination-item-disabled"><a>Вперед</a></li>
     <?php else: ?>
     <li class="pagination-item pagination-item-next">
-        <a href="<?= esc($addressWithoutPageNumber . ($currentPage + 1)) ?>">Вперед</a>
+        <a href="<?= esc(getModifiedLink($pageAddress, $qsParameters, ['page' => $currentPage + 1])) ?>">Вперед</a>
     </li>
     <?php endif ?>
 </ul>

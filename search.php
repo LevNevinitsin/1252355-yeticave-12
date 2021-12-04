@@ -2,7 +2,7 @@
 require __DIR__ . '/initialize.php';
 require __DIR__ . '/validators.php';
 
-$currentPage = $_GET['page'] ?? 1;
+$currentPage = (int) ($_GET['page'] ?? 1);
 
 if (validateInt($currentPage) || validateNumberRange($currentPage, 1)) {
     httpError($categories, $user, 404);
@@ -30,18 +30,19 @@ if (!$searchMessage) {
         [$categories, $user, 404]
     );
 
-    $addressWithoutPageNumber = $_SERVER['PHP_SELF'] . '?' . getQsWithoutPageNumber($_GET);
+    $qsParameters = ['search' => $searchString, 'page' => $currentPage];
     $foundItems = getItems($db, $pageItemsLimit, $offset, $searchString);
     $foundItems = includeCbResultsForEachElement($foundItems, 'getRemainingTime', ['item_date_expire']);
 }
 
 echo getHtml('search.php', [
     'categories' => $categories,
+    'pageAddress' => $_SERVER['PHP_SELF'],
+    'qsParameters' => $qsParameters,
     'searchString' => $searchString,
     'searchMessage' => $searchMessage ?? 'Ничего не найдено по вашему запросу',
     'foundItems' => $foundItems ?? null,
     'currentPage' => $currentPage ?? null,
     'pagesCount' => count($pages) ?? null,
     'pages' => $pages ?? null,
-    'addressWithoutPageNumber' => $addressWithoutPageNumber,
 ], $categories, $user, 'Результаты поиска', $searchString);

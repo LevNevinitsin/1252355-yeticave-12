@@ -266,14 +266,27 @@ function getBidsCountText(int $bidsCount, string $zeroCountText = 'Старто�
 }
 
 /**
- * Получает query string без номера страницы
- * @param array $qsParameters qs-параметры
- * @return string query string без номера страницы
+ * Получает query string с изменёнными параметрами
+ * @param   array   $qsParameters  qs-параметры
+ * @param   array   $modifiers     Параметры и соответствующие им значения, которые должны появиться в query string
+ * @return  string                 Модифицированная query string
  */
-function getQsWithoutPageNumber(array $qsParameters): string
+function getModifiedQs(array $qsParameters, array $modifiers): string
 {
-    unset($qsParameters['page']);
-    return http_build_query($qsParameters) . '&page=';
+    $qsParameters = array_filter(array_merge($qsParameters, $modifiers));
+    return $qsParameters ? http_build_query($qsParameters) : '';
+}
+
+/**
+ * Получает ссылку c изменёнными qs-параметрами
+ * @param   string  $pageAddress   Адрес страницы
+ * @param   array   $qsParameters  qs-параметры
+ * @param   array   $modifiers     Параметры и соответствующие им значения, которые должны появиться в query string
+ * @return  string                 Cсылка c изменёнными qs-параметрами
+ */
+function getModifiedLink(string $pageAddress, array $qsParameters, array $modifiers): string
+{
+    return $pageAddress . '?' . getModifiedQs($qsParameters, $modifiers);
 }
 
 /**
