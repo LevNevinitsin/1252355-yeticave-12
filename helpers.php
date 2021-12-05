@@ -21,56 +21,87 @@ function isDateValid(string $date) : bool {
 }
 
 /**
- * Создает подготовленное выражение на основе готового SQL запроса и переданных данных
- *
- * @param $link mysqli Ресурс соединения
- * @param $sql string SQL запрос с плейсхолдерами вместо значений
- * @param array $data Данные для вставки на место плейсхолдеров
- *
- * @return mysqli_stmt Подготовленное выражение
+ * Выполняет INSERT, UPDATE или DELETE запрос к базе данных
+ * @param   mysqli       $db           Объект с базой данных
+ * @param   string       $sql          Sql-запрос
+ * @param   array        $params       Параметры запроса
+ * @param   string|null  $typesString  Строка с типами параметров
+ * @return  array                      Массив со значениями [количество затронутых строк,
+ *                                     созданное для столбца AUTO_INCREMENT значение]
  */
-function dbGetPrepareStmt($link, $sql, $data = []) {
-    $stmt = mysqli_prepare($link, $sql);
+function dbProcessDml(mysqli $db, string $sql, ?array $params = null, ?string $typesString = null): array
+{
+    $params ? dbRunPreparedStmt($db, $sql, $params, $typesString) : $db->query($sql);
+    return ['affectedRowsCount' => $db->affected_rows, 'insertId' => $db->insert_id];
+}
 
-    if ($stmt === false) {
-        $errorMsg = 'Не удалось инициализировать подготовленное выражение: ' . mysqli_error($link);
-        die($errorMsg);
-    }
+/**
+ * Выполняет выборку данных из таблицы
+ * @param   mysqli       $db           Объект с базой данных
+ * @param   string       $sql          Sql-запрос
+ * @param   array        $params       Параметры запроса
+ * @param   string|null  $typesString  Строка с типами параметров
+ * @return  array|null                 Данные таблицы
+ */
+function dbSelectAll(mysqli $db, string $sql, ?array $params = null, ?string $typesString = null): ?array
+{
+    return dbSelect($db, $sql, $params, $typesString)->fetch_all(MYSQLI_ASSOC);
+}
 
-    if ($data) {
-        $types = '';
-        $stmt_data = [];
+/**
+ * Выполняет выборку данных из одной строки таблицы
+ * @param   mysqli       $db           Объект с базой данных
+ * @param   string       $sql          Sql-запрос
+ * @param   array        $params       Параметры запроса
+ * @param   string|null  $typesString  Строка с типами параметров
+ * @return  array|null                 Данные строки
+ */
+function dbSelectAssoc(mysqli $db, string $sql, ?array $params = null, ?string $typesString = null): ?array
+{
+    return dbSelect($db, $sql, $params, $typesString)->fetch_assoc();
+}
 
-        foreach ($data as $value) {
-            $type = 's';
+/**
+ * Выполняет выборку значения из конкретной ячейки
+ * @param   mysqli       $db           Объект с базой данных
+ * @param   string       $sql          Sql-запрос
+ * @param   string       $cellName     Название ячейки
+ * @param   array        $params       Параметры запроса
+ * @param   string|null  $typesString  Строка с типами параметров
+ * @return  mixed                      Значение ячейки
+ */
+function dbSelectCell(mysqli $db, string $sql, string $cellName, ?array $params = null, ?string $typesString = null)
+{
+    return dbSelect($db, $sql, $params, $typesString)->fetch_assoc()[$cellName] ?? null;
+}
 
-            if (is_int($value)) {
-                $type = 'i';
-            }
-            else if (is_string($value)) {
-                $type = 's';
-            }
-            else if (is_double($value)) {
-                $type = 'd';
-            }
+/**
+ * Выполняет SELECT-запрос, возвращая объект mysqli_result
+ * @param   mysqli         $db           Объект с базой данных
+ * @param   string         $sql          Sql-запрос
+ * @param   array          $params       Параметры запроса
+ * @param   string|null    $typesString  Строка с типами параметров
+ * @return  mysqli_result                Объект, представляющий результирующий набор, полученный из запроса в базу данных
+ */
+function dbSelect(mysqli $db, string $sql, ?array $params = null, ?string $typesString = null): mysqli_result
+{
+    return $params ? dbRunPreparedStmt($db, $sql, $params, $typesString)->get_result() : $db->query($sql);
+}
 
-            if ($type) {
-                $types .= $type;
-                $stmt_data[] = $value;
-            }
-        }
-
-        $values = array_merge([$stmt, $types], $stmt_data);
-
-        $func = 'mysqli_stmt_bind_param';
-        $func(...$values);
-
-        if (mysqli_errno($link) > 0) {
-            $errorMsg = 'Не удалось связать подготовленное выражение с параметрами: ' . mysqli_error($link);
-            die($errorMsg);
-        }
-    }
-
+/**
+ * Создает подготовленное выражение и выполняет его
+ * @param   mysqli       $db           Объект с базой данных
+ * @param   string       $sql          Sql-запрос
+ * @param   array        $params       Параметры запроса
+ * @param   string|null  $typesString  Строка с типами параметров
+ * @return  mysqli_stmt                Объект, представляющий подготовленное выражение
+ */
+function dbRunPreparedStmt(mysqli $db, string $sql, array $params, ?string $typesString): mysqli_stmt
+{
+    $stmt = $db->prepare($sql);
+    $typesString = $typesString ?? str_repeat('s', count($params));
+    $stmt->bind_param($typesString, ...$params);
+    $stmt->execute();
     return $stmt;
 }
 
@@ -159,6 +190,47 @@ function esc(?string $text): string
 }
 
 /**
+ * Добавляет в каждый элемент двумерного массива результаты выполнения переданной функции
+ * @param   array       $items          Двумерный массив
+ * @param   string      $cb             Имя передаваемой функции
+ *
+ * @param   array       $itemKeys
+ * Имена ключей, по которым коллбек будет обращаться к значениям внутри элемента.
+ * Порядок указания ключей должен соответствовать порядку параметров в коллбеке.
+ *
+ * @param   mixed|null  $resultsScheme
+ * Не указывается вообще, если коллбек возвращает ассоциативный массив;
+ * указывается в виде массива, если коллбек возвращает обычный массив;
+ * в виде строки, если коллбек возвращает скаляр.
+ *
+ * @return  array                       Обновлённый двумерный массив
+ */
+function includeCbResultsForEachElement(
+    array $items,
+    string $cb,
+    array $itemKeys,
+    $resultsScheme = null
+): array
+{
+    foreach ($items as &$item) {
+        $itemParams = array_map(function($itemKey) use ($item) { return $item[$itemKey]; }, $itemKeys);
+        $cbResult = $cb(...$itemParams);
+
+        if (!$resultsScheme) {
+            $item = array_merge($item, $cbResult);
+        } elseif (gettype($resultsScheme) === 'array') {
+            foreach ($resultsScheme as $key => $resultKey) {
+                $item[$resultKey] = $cbResult[$key];
+            }
+        } else {
+            $item[$resultsScheme] = $cb(...$itemParams);
+        }
+    }
+
+    return $items;
+}
+
+/**
  * Получает оставшееся до указанной даты время
  * @param   string  $expireDate  Указанная дата
  * @return  array                Оставшееся время в виде массива [ЧЧ, ММ, СС], либо null, если время истекло
@@ -174,7 +246,12 @@ function getRemainingTime(string $date): ?array
     $hoursCount = str_pad(floor($diff / 3600), 2, '0', STR_PAD_LEFT);
     $minutesCount = str_pad(floor(($diff % 3600) / 60), 2, '0', STR_PAD_LEFT);
     $secondsCount = str_pad(floor(($diff % 3600) % 60), 2, '0', STR_PAD_LEFT);
-    return [$hoursCount, $minutesCount, $secondsCount];
+
+    return [
+        'remainingHours' => $hoursCount,
+        'remainingMinutes' => $minutesCount,
+        'remainingSeconds' => $secondsCount,
+    ];
 }
 
 /**
@@ -189,14 +266,27 @@ function getBidsCountText(int $bidsCount, string $zeroCountText = 'Старто�
 }
 
 /**
- * Получает атрибут href со ссылкой на страницу поиска
- * @param   string   $searchString  Значение поисковой строки
- * @param   integer  $page          Номер нужной страницы
- * @return  string                  Итоговый атрибут href
+ * Получает query string с изменёнными параметрами
+ * @param   array   $qsParameters  qs-параметры
+ * @param   array   $modifiers     Параметры и соответствующие им значения, которые должны появиться в query string
+ * @return  string                 Модифицированная query string
  */
-function getSearchLink(string $searchString, int $page): string
+function getModifiedQs(array $qsParameters, array $modifiers): string
 {
-    return "href='/search.php?search=$searchString&page=$page'";
+    $qsParameters = array_filter(array_merge($qsParameters, $modifiers));
+    return $qsParameters ? http_build_query($qsParameters) : '';
+}
+
+/**
+ * Получает ссылку c изменёнными qs-параметрами
+ * @param   string  $pageAddress   Адрес страницы
+ * @param   array   $qsParameters  qs-параметры
+ * @param   array   $modifiers     Параметры и соответствующие им значения, которые должны появиться в query string
+ * @return  string                 Cсылка c изменёнными qs-параметрами
+ */
+function getModifiedLink(string $pageAddress, array $qsParameters, array $modifiers): string
+{
+    return $pageAddress . '?' . getModifiedQs($qsParameters, $modifiers);
 }
 
 /**
@@ -244,6 +334,10 @@ function httpError(array $categories, ?array $user, int $responseCode, ?string $
             'title' => 'Страница не найдена',
             'errorText' => 'Данной страницы не существует на сайте.',
         ],
+        500 => [
+            'title' => 'Технические работы',
+            'errorText' => 'Извините, ведутся временные технические работы',
+        ]
     ];
 
     $errorInfo = $errorsMap[$responseCode];
@@ -259,6 +353,36 @@ function httpError(array $categories, ?array $user, int $responseCode, ?string $
         'title' => $title,
     ], $categories, $user, $title);
     exit;
+}
+
+/**
+ * Инициализирует пагинацию, возвращая количество страниц и смещение выборки
+ * @param   mixed    $currentPage     Текущая страница
+ * @param   mixed    $itemCount       Количество итемов
+ * @param   integer  $pageItemsLimit  Максимальное число итемов на странице
+ * @param   string   $errorCb         Функция для вызова в случае, если номер текущей страницы больше максимального
+ * @param   array    $errorCbParams   Параметры для этой функции
+ * @return  array                     Массив вида [количество страниц, смещение выборки]
+ */
+function initializePagination(
+    $currentPage,
+    $itemCount,
+    int $pageItemsLimit,
+    string $errorCb,
+    array $errorCbParams
+): array
+{
+    $currentPage = (int) ($currentPage);
+    $pagesCount = (int) ceil($itemCount / $pageItemsLimit) ?: 1;
+
+    if ($currentPage > $pagesCount) {
+        $errorCb(...$errorCbParams);
+    }
+
+    $offset = ($currentPage - 1) * $pageItemsLimit;
+    $pages = range(1, $pagesCount);
+
+    return [$pages, $offset];
 }
 
 /**

@@ -29,18 +29,28 @@ function getItem(mysqli $db, int $itemId): ?array
                ON i.category_id = c.category_id
          WHERE i.item_id = ?
     ";
-    $stmt = $db->prepare($sql);
-    $stmt->bind_param("s", $itemId);
-    $stmt->execute();
-    return $stmt->get_result()->fetch_assoc();
+
+    return dbSelectAssoc($db, $sql, [$itemId]);
 }
 
 /**
- * Получает действующие лоты, отсортированные от новых к старым
- * @param   mysqli      $db  Объект с базой данных
- * @return  array|null       Ассоциативный массив с данными лотов
+ * Получает действующие лоты. Может задавать смещение выборки и ограничивать её по поисковому запросу,
+ * по id категории и по максимальному количеству итемов.
+ *
+ * @param  mysqli       $db              Объект с базой данных
+ * @param  integer|null $pageItemsLimit  Максимальное количество элементов на странице
+ * @param  integer|null $offset          Смещение выборки
+ * @param  string|null  $searchString    Значение поисковой строки
+ * @param  integer|null $categoryId      id категории
+ * @return array|null                    Выбранные лоты
  */
-function getNewItems(mysqli $db): ?array
+function getItems(
+    mysqli $db,
+    ?int $pageItemsLimit = 9,
+    ?int $offset = 0,
+    ?string $searchString = null,
+    ?int $categoryId = null
+): ?array
 {
     $sql = "
         SELECT i.item_id,
@@ -62,11 +72,24 @@ function getNewItems(mysqli $db): ?array
                ) AS b
                ON i.item_id = b.item_id
          WHERE item_date_expire > NOW()
-         ORDER BY item_date_added DESC
     ";
-    return $db->query($sql)->fetch_all(MYSQLI_ASSOC);
-}
 
+    $params = [$pageItemsLimit, $offset];
+
+    if ($searchString) {
+        $sql .= "AND MATCH(i.item_name, i.item_description) AGAINST(?) LIMIT ? OFFSET ?";
+        array_unshift($params, $searchString);
+    } else {
+        if ($categoryId) {
+            $sql .= "AND c.category_id = ?";
+            array_unshift($params, $categoryId);
+        }
+
+        $sql .= " ORDER BY item_date_added DESC LIMIT ? OFFSET ?";
+    }
+
+    return dbSelectAll($db, $sql, $params);
+}
 /**
  * Добавляет в базу данных запись с новым лотом
  * @param   mysqli   $db        Объект с базой данных
@@ -89,9 +112,7 @@ function insertItem(mysqli $db, array $itemData): int
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     ";
 
-    $stmt = $db->prepare($sql);
-    $stmt->bind_param(
-        "ssssssss",
+    $params = [
         $itemData['lot-name'],
         $itemData['description'],
         $itemData['image']['webPath'],
@@ -100,50 +121,9 @@ function insertItem(mysqli $db, array $itemData): int
         $itemData['user_id'],
         $itemData['category_id'],
         $itemData['lot-date']
-    );
-    $stmt->execute();
+    ];
 
-    return $db->insert_id;
-}
-
-/**
- * Находит лоты с учётом максимального числа элементов на странице и смещения выборки
- * @param   mysqli      $db              Объект с базой данных
- * @param   string      $searchString    Значение поисковой строки
- * @param   integer     $pageItemsLimit  Максимальное количество элементов на странице
- * @param   integer     $offset          Смещение выборки
- * @return  array|null                   Найденные лоты
- */
-function searchItems(mysqli $db, string $searchString, int $pageItemsLimit, int $offset): array
-{
-    $sql = "
-        SELECT i.item_id,
-               i.item_name,
-               i.item_image,
-               i.item_date_expire,
-               COALESCE(b.top_bid, i.item_initial_price) AS current_price,
-               COALESCE(b.bids_count, 0) AS bids_count,
-               c.category_name
-          FROM items AS i
-               INNER JOIN categories AS c
-               ON i.category_id = c.category_id
-               LEFT JOIN (
-                   SELECT item_id,
-                          MAX(bid_price) AS top_bid,
-                          COUNT(bid_id) AS bids_count
-                     FROM bids
-                    GROUP BY item_id
-               ) AS b
-               ON i.item_id = b.item_id
-         WHERE item_date_expire > NOW()
-           AND MATCH(i.item_name, i.item_description) AGAINST(?)
-         LIMIT ? OFFSET ?
-    ";
-
-    $stmt = $db->prepare($sql);
-    $stmt->bind_param("sss", $searchString, $pageItemsLimit, $offset);
-    $stmt->execute();
-    return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    return dbProcessDml($db, $sql, $params)['insertId'];
 }
 
 /**
@@ -161,10 +141,7 @@ function countFoundItems(mysqli $db, string $searchString): int
            AND MATCH(item_name, item_description) AGAINST(?)
     ";
 
-    $stmt = $db->prepare($sql);
-    $stmt->bind_param("s", $searchString);
-    $stmt->execute();
-    return $stmt->get_result()->fetch_assoc()['foundItemsCount'];
+    return dbSelectCell($db, $sql, 'foundItemsCount', [$searchString]);
 }
 
 /**
@@ -188,7 +165,7 @@ function getNewWinners(mysqli $db): array
            AND b.bid_price = (SELECT MAX(b1.bid_price) FROM bids AS b1 WHERE b1.item_id = i.item_id)
     ";
 
-    return $db->query($sql)->fetch_all(MYSQLI_ASSOC);
+    return dbSelectAll($db, $sql);
 }
 
 /**
@@ -200,12 +177,24 @@ function getNewWinners(mysqli $db): array
  */
 function setItemWinner(mysqli $db, int $itemId, int $winnerId): bool
 {
+    $sql = "UPDATE items SET winner_id = ? WHERE item_id = ?";
+    return (bool) dbProcessDml($db, $sql, [$winnerId, $itemId])['affectedRowsCount'];
+}
+
+/**
+ * Считает общее количество лотов, относящихся к определённой категории
+ * @param   mysqli   $db          Объект с базой данных
+ * @param   integer  $categoryId  id категории
+ * @return  integer               Количество лотов, относящихся к категории
+ */
+function countCategoryItems(mysqli $db, int $categoryId): int
+{
     $sql = "
-        UPDATE items SET winner_id = ? WHERE item_id = ?
+        SELECT COUNT(*) as categoryItemsCount
+          FROM items
+         WHERE item_date_expire > NOW()
+           AND category_id = ?
     ";
 
-    $stmt = $db->prepare($sql);
-    $stmt->bind_param("ss", $winnerId, $itemId);
-    $stmt->execute();
-    return (bool) $db->affected_rows;
+    return dbSelectCell($db, $sql, 'categoryItemsCount', [$categoryId]);
 }
