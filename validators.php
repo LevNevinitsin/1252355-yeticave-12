@@ -279,7 +279,6 @@ function validateFileSize(string $path, int $maxSize): ?string
     return null;
 }
 
-// TODO: ренейм? а то непонятно, что мы завязаны на $_FILES
 /**
  * Валидирует файл на MIME тип, расширение и разме
  * @param   array        $fileAtrributes  Атрибуты файла
@@ -327,7 +326,7 @@ function getFormErrors(array $formData, array $fieldsRules): array
     $errors = [];
 
     foreach ($fieldsRules as $fieldName => $validators) {
-        $value = $formData[$fieldName] ?? null; // TODO: А если придет null из json'a?
+        $value = $formData[$fieldName] ?? null;
         $errors[$fieldName] = getFieldError($value, $validators);
     }
 
