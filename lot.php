@@ -16,9 +16,9 @@ if (!$item) {
 }
 
 list (
-    $item['remainingHours'],
-    $item['remainingMinutes'],
-    $item['remainingSeconds']
+    'remainingHours' => $item['remainingHours'],
+    'remainingMinutes' => $item['remainingMinutes'],
+    'remainingSeconds' => $item['remainingSeconds']
 ) = getRemainingTime($item['item_date_expire']);
 
 $bidMinimumValue = $item['current_price'] + $item['item_bid_step'];
@@ -29,8 +29,8 @@ foreach ($bids as &$bid) {
 }
 
 $isAuth = $user;
-$isUserSeller = $user['user_id'] === $item['seller_id'];
-$isUserLastBettor = $user['user_id'] === ($bids[0]['user_id'] ?? null);
+$isUserSeller = ($user['user_id'] ?? null) === $item['seller_id'];
+$isUserLastBettor = ($user['user_id'] ?? null) === ($bids[0]['user_id'] ?? null);
 $isExpired = $item['remainingHours'] === null;
 $isAllowedToBet = $isAuth && !$isUserSeller && !$isUserLastBettor && !$isExpired;
 
